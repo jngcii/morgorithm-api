@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 django = "*"
 djangorestframework = "*"
+psycopg2-binary = "*"
+django-environ = "*"
 
 [requires]
 python_version = "3.7"
