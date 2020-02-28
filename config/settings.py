@@ -34,24 +34,24 @@ ALLOWED_HOSTS = []
 # Application definition
 
 DJANGO_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    # "django.contrib.sites",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "django.contrib.humanize", # Handy template tags
-    # "django.forms",
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    # 'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.humanize', # Handy template tags
+    # 'django.forms',
 ]
 
 THIRD_PARTY_APPS = [
-    "rest_framework",
-    # "rest_framework.authtoken",
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 LOCAL_APPS = [
-    
+    'api.users.apps.UsersConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -92,17 +92,17 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    "default": env.db("DATABASE_URL", default="postgres:///hmc")
+    'default': env.db('DATABASE_URL', default='postgres:///hmc')
 }
 
 # DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "helpmycode",
-#         "USER": "root",
-#         "PASSWORD": os.environ.get("POSTGRES_PW"),
-#         "HOST": os.environ.get("POSTGRES_HOST"),
-#         "PORT": "5432"
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'helpmycode',
+#         'USER': 'root',
+#         'PASSWORD': os.environ.get('POSTGRES_PW'),
+#         'HOST': os.environ.get('POSTGRES_HOST'),
+#         'PORT': '5432'
 #     }
 # }
 
@@ -143,3 +143,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+
+REST_FRAMEWORK = {
+  'DEFAULT_AUTHENTICATION_CLASSES': (
+      'rest_framework.authentication.TokenAuthentication',
+    )
+}
