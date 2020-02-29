@@ -4,8 +4,10 @@ from rest_framework import status
 from .serializers import UserSerializer
 from .models import User
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny
 
 class UserCreate(APIView):
+    permission_classes = [AllowAny]
     """ 
     Creates the user. 
     """
