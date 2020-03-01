@@ -1,6 +1,6 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from .models import User
+from .models import User, Group
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
@@ -10,7 +10,8 @@ class AccountsTest(APITestCase):
         self.test_user = User.objects.create_user('testuser', 'test@example.com', 'testpassword')
 
         # URL for creating an account.
-        self.create_url = reverse('user-create')
+        self.sign_up_url = reverse('sign-up')
+        self.create_group_url = reverse('create-group')
 
     def test_create_user(self):
         """
@@ -22,7 +23,7 @@ class AccountsTest(APITestCase):
             'password': 'somepassword',
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         user = User.objects.latest('id')
         token = Token.objects.get(user=user)
         self.assertEqual(response.data['token'], token.key)
@@ -46,7 +47,7 @@ class AccountsTest(APITestCase):
                 'password': 'foo'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['password']), 1)
@@ -58,7 +59,7 @@ class AccountsTest(APITestCase):
                 'password': ''
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['password']), 1)
@@ -72,7 +73,7 @@ class AccountsTest(APITestCase):
             'password': 'foobarbaz'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['username']), 1)
@@ -84,7 +85,7 @@ class AccountsTest(APITestCase):
                 'password': 'foobarbaz'
                 }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['username']), 1)
@@ -96,7 +97,7 @@ class AccountsTest(APITestCase):
                 'password': 'testuser'
                 }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['username']), 1)
@@ -110,7 +111,7 @@ class AccountsTest(APITestCase):
             'password': 'testuser'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['email']), 1)
@@ -122,7 +123,7 @@ class AccountsTest(APITestCase):
             'passsword': 'foobarbaz'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['email']), 1)
@@ -134,7 +135,7 @@ class AccountsTest(APITestCase):
             'password': 'foobarbaz'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['email']), 1)
@@ -145,7 +146,7 @@ class AccountsTest(APITestCase):
             'password': 'foobarbaz'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
 
@@ -155,6 +156,42 @@ class AccountsTest(APITestCase):
             'password': 'foobarbaz'
         }
 
-        response = self.client.post(self.create_url, data, format='json')
+        response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
+
+    def test_create_group(self):
+        data = {
+            'name': 'testgroup',
+        }
+
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+
+    def test_create_group_with_no_name(self):
+        data = {
+            'name': ''
+        }
+
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Group.objects.count(), 0)
+        self.assertEqual(len(response.data['name']), 1)
+
+    def test_create_group_with_too_long_name(self):
+        data = {
+            'name': 'foo'*100
+        }
+
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Group.objects.count(), 0)
+        self.assertEqual(len(response.data['name']), 1)
+
+    def test_create_group_with_no_name_field(self):
+        data = {}
+
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Group.objects.count(), 0)
