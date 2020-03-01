@@ -2,6 +2,13 @@ from django.db import models
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager)
 
 
+class Group(models.Model):
+    """
+    users' group
+    """
+    name = models.CharField(max_length=255, unique=True)
+
+
 class MyUserManager(BaseUserManager):
     """
     custom user manager
@@ -43,6 +50,7 @@ class MyUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+
 class User(AbstractBaseUser):
     """
     custom user model
@@ -54,6 +62,7 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=11, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=80, null=True, blank=True)
+    group = models.ManyToManyField(Group, blank=True, related_name='members')
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 

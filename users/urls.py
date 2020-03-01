@@ -2,5 +2,6 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url('api/users/', views.UserCreate.as_view(), name='user-create'),
+    url('sign-up/', views.SignUp.as_view(), name='sign-up'),
+    url('create-group/', views.CreateGroup.as_view(), name='create-group'),
 ]

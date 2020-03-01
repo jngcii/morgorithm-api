@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from .models import User
+from .models import User, Group
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -25,3 +25,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'password')
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(
+        required=True,
+        max_length=255,
+        validators=[UniqueValidator(queryset=Group.objects.all())]
+    )
+    members = UserSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Group
+        fields = ('id', 'name', 'members')
