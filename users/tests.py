@@ -6,12 +6,63 @@ from rest_framework.authtoken.models import Token
 
 class AccountsTest(APITestCase):
     def setUp(self):
-        # We want to go ahead and originally create a user. 
-        self.test_user = User.objects.create_user('testuser', 'test@example.com', 'testpassword')
 
         # URL for creating an account.
         self.sign_up_url = reverse('sign-up')
+        self.sign_in_url = reverse('sign-in')
         self.create_group_url = reverse('create-group')
+
+        # We want to go ahead and originally create a user. 
+        self.credential = {
+            'username': 'testuser',
+            'email': 'test@example.com',
+            'password': 'testpassword'
+        }
+        self.test_user = User.objects.create_user(**self.credential)
+
+
+    def test_sign_in(self):
+        """
+        test sign in
+        """
+        data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+
+        response = self.client.post(self.sign_in_url, data, format='json')
+        user = User.objects.latest('id')
+        token = Token.objects.get(user=user)
+        self.assertEqual(response.data['token'], token.key)
+
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], data['username'])
+        self.assertFalse('password' in response.data)
+
+    def test_sign_in_with_wrong_username(self):
+        """
+        test sign in end point with wrong username
+        """
+        data = {
+            'username': 'wtf',
+            'password': 'testpassword'
+        }
+
+        response = self.client.post(self.sign_in_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_sign_in_with_wrong_password(self):
+        """
+        test sign in end point with wrong username
+        """
+        data = {
+            'username': 'testuser',
+            'password': '1223asdf'
+        }
+
+        response = self.client.post(self.sign_in_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_user(self):
         """
@@ -161,6 +212,7 @@ class AccountsTest(APITestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_create_group(self):
+
         data = {
             'name': 'testgroup',
         }

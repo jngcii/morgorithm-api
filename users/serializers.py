@@ -24,7 +24,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
+        fields = ('id', 'username', 'email', 'name', 'password', 'group')
+
+
+class LogInSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True, max_length=32)
+    password = serializers.CharField(min_length=8, write_only=True)
+    
+    class Meta:
+        model = User
+        fields = ('username', 'password')
 
 
 class GroupSerializer(serializers.ModelSerializer):
