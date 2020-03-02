@@ -17,7 +17,7 @@ class ProblemGroup(models.Model):
 
 class Problem(models.Model):
     origin = models.ForeignKey(OriginProb, on_delete=models.CASCADE)
-    is_solved = models.BooleanField(default=True)
-    solved_time = models.DateTimeField()
+    is_solved = models.BooleanField(default=False)
+    solved_time = models.DateTimeField(null=True, blank=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='problems')
     group = models.ManyToManyField(ProblemGroup, blank=True, related_name='problems')
