@@ -64,11 +64,15 @@ class CreateGroup(APIView):
     """
 
     def post(self, request):
+        user = request.user
+        if user.group.count() >=5:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         serializer = GroupSerializer(data=request.data)
         if serializer.is_valid():
             group = serializer.save()
             if group:
-                group.members.add(request.user)
+                group.members.add(user)
                 group.save()
                 new_serializer = GroupSerializer(group)
                 return Response(new_serializer.data, status=status.HTTP_201_CREATED)
