@@ -225,6 +225,7 @@ class AccountsTest(APITestCase):
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(response.data['members']), 1)
 
     def test_create_group_with_no_name(self):
         login_data = {

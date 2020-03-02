@@ -5,6 +5,7 @@ from .serializers import UserSerializer, LogInSerializer, GroupSerializer
 from .models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
+from pprint import pprint
 
 
 class SignUp(APIView):
@@ -67,6 +68,9 @@ class CreateGroup(APIView):
         if serializer.is_valid():
             group = serializer.save()
             if group:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                group.members.add(request.user)
+                group.save()
+                new_serializer = GroupSerializer(group)
+                return Response(new_serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

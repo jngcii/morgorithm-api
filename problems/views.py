@@ -31,7 +31,7 @@ class CopyAndGetProbs(APIView):
     def get_user_probs(self, user):
         try:
             probs = Problem.objects.filter(creator=user)
-            return probs.all()
+            return probs
         except Problem.DoesNotExist:
             return None
     
