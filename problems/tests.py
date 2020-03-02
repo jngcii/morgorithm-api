@@ -1,6 +1,6 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
-from .models import OriginProb
+from .models import OriginProb, Problem
 from users.models import User
 from rest_framework import status
 
@@ -10,6 +10,7 @@ class ProbsTest(APITestCase):
 
         self.add_origin_prob_url = reverse('add-origin-prob')
         self.sign_in_url = reverse('sign-in')
+        self.copy_and_get_props_url = reverse('copy-and-get-probs')
 
         self.super_credential = {
             'username': 'root',
@@ -123,3 +124,76 @@ class ProbsTest(APITestCase):
         response = self.client.post(self.add_origin_prob_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(OriginProb.objects.count(), 0)
+
+
+    def test_copy_all_prob(self):
+        """
+        test add original problem
+        """
+        ### 루트를 통해 복사할 OriginProblem 넣기 (1개)
+        root_data = {
+            'username': 'root',
+            'password': 'asdf1488'
+        }
+        root_res = self.client.post(self.sign_in_url, root_data, format='json')
+        data = {
+            'url': 'https://www.acmicpc.net/problem/1339',
+            'number': 1339,
+            'category': 'BOJ',
+            'title': '[S/W 문제해결 기본] 8일차 - 암호문3'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(root_res.data['token']))
+        response = self.client.post(self.add_origin_prob_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(OriginProb.objects.count(), 1)
+
+        ### user로 로그인 한 후, 루트의 OriginProblem을 user Problem으로 복사하고 가져오기
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        copy_response = self.client.get(self.copy_and_get_props_url)
+        self.assertEqual(copy_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Problem.objects.count(), 1)
+        self.assertEqual(copy_response.data[0]['origin']['url'], data['url'])
+        self.assertEqual(copy_response.data[0]['origin']['number'], data['number'])
+        self.assertEqual(copy_response.data[0]['origin']['title'], data['title'])
+
+
+    def test_copy_same_origin(self):
+        """
+        test origin is copied if same probem copy
+        """
+        ### 루트를 통해 복사할 OriginProblem 넣기 (1개)
+        root_data = {
+            'username': 'root',
+            'password': 'asdf1488'
+        }
+        root_res = self.client.post(self.sign_in_url, root_data, format='json')
+        data = {
+            'url': 'https://www.acmicpc.net/problem/1339',
+            'number': 1339,
+            'category': 'BOJ',
+            'title': '[S/W 문제해결 기본] 8일차 - 암호문3'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(root_res.data['token']))
+        response = self.client.post(self.add_origin_prob_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(OriginProb.objects.count(), 1)
+
+        ### user로 로그인 한 후, 루트의 OriginProblem을 user Problem으로 복사하고 가져오기
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        copy_response = self.client.get(self.copy_and_get_props_url)
+        self.assertEqual(copy_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Problem.objects.count(), 1)
+
+        copy_response = self.client.get(self.copy_and_get_props_url)
+        self.assertEqual(copy_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Problem.objects.count(), 1)
