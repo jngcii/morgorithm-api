@@ -61,7 +61,6 @@ class CreateGroup(APIView):
     """ 
     Creates the group. 
     """
-    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = GroupSerializer(data=request.data)

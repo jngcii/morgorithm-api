@@ -1,11 +1,12 @@
 from django.urls import reverse
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from .models import User, Group
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 class AccountsTest(APITestCase):
     def setUp(self):
+        self.client = APIClient()
 
         # URL for creating an account.
         self.sign_up_url = reverse('sign-up')
@@ -212,38 +213,82 @@ class AccountsTest(APITestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_create_group(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        self.client.post(self.sign_in_url, login_data, format='json')
+        user = User.objects.latest('id')
+        token = Token.objects.get(user=user)
 
         data = {
             'name': 'testgroup',
         }
 
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(token.key))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
 
     def test_create_group_with_no_name(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        self.client.post(self.sign_in_url, login_data, format='json')
+        user = User.objects.latest('id')
+        token = Token.objects.get(user=user)
+
         data = {
             'name': ''
         }
 
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(token.key))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
         self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_too_long_name(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        self.client.post(self.sign_in_url, login_data, format='json')
+        user = User.objects.latest('id')
+        token = Token.objects.get(user=user)
+
         data = {
             'name': 'foo'*100
         }
 
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(token.key))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
         self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_no_name_field(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        self.client.post(self.sign_in_url, login_data, format='json')
+        user = User.objects.latest('id')
+        token = Token.objects.get(user=user)
+        
         data = {}
 
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(token.key))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Group.objects.count(), 0)
+
+    def test_create_group_with_no_token(self):
+        data = {
+            'name': 'testgroup',
+        }
+
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(Group.objects.count(), 0)
