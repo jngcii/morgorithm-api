@@ -94,9 +94,9 @@ class AccountsTest(APITestCase):
         Ensure user is not created for password lengths less than 8.
         """
         data = {
-                'username': 'foobar',
-                'email': 'foobarbaz@example.com',
-                'password': 'foo'
+            'username': 'foobar',
+            'email': 'foobarbaz@example.com',
+            'password': 'foo'
         }
 
         response = self.client.post(self.sign_up_url, data, format='json')
@@ -106,9 +106,9 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_no_password(self):
         data = {
-                'username': 'foobar',
-                'email': 'foobarbaz@example.com',
-                'password': ''
+            'username': 'foobar',
+            'email': 'foobarbaz@example.com',
+            'password': ''
         }
 
         response = self.client.post(self.sign_up_url, data, format='json')
@@ -132,10 +132,10 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_no_username(self):
         data = {
-                'username': '',
-                'email': 'foobarbaz@example.com',
-                'password': 'foobarbaz'
-                }
+            'username': '',
+            'email': 'foobarbaz@example.com',
+            'password': 'foobarbaz'
+        }
 
         response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -144,10 +144,10 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_preexisting_username(self):
         data = {
-                'username': 'testuser',
-                'email': 'user@example.com',
-                'password': 'testuser'
-                }
+            'username': 'testuser',
+            'email': 'user@example.com',
+            'password': 'testuser'
+        }
 
         response = self.client.post(self.sign_up_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -277,3 +277,31 @@ class AccountsTest(APITestCase):
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(Group.objects.count(), 0)
+
+    def test_enter_group(self):
+
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        create_res = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(create_res.data['members']), 1)
+        
+        regis_data = {
+            'username': 'foobar',
+            'email': 'foobarbaz@example.com',
+            'password': 'foobarpassword'
+        }
+        user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
+        enter_res = self.client.get(reverse('enter-group', kwargs={'groupId': create_res.data['id']}))
+        self.assertEqual(enter_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(enter_res.data['members']), 2)
+        self.assertEqual(enter_res.data['members'][-1]['username'], regis_data['username'])
