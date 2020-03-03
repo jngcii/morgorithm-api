@@ -117,3 +117,17 @@ class LeaveGroup(APIView):
         if group.members.count() == 0:
             group.delete()
         return Response(status=status.HTTP_200_OK)
+
+
+class SearchGroup(APIView):
+    """
+    Search the group
+    """
+    def get(self, request, txt):
+        try:
+            groups = Group.objects.filter(name__icontains=txt)[:10]
+        except Group.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = GroupSerializer(groups, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
