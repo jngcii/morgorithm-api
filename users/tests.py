@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import User, Group
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+import pprint
 
 class AccountsTest(APITestCase):
     def setUp(self):
@@ -35,6 +36,8 @@ class AccountsTest(APITestCase):
         user = User.objects.latest('id')
         token = Token.objects.get(user=user)
         self.assertEqual(response.data['token'], token.key)
+
+        pprint.pprint(response.data)
 
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -227,6 +230,40 @@ class AccountsTest(APITestCase):
         self.assertEqual(Group.objects.count(), 1)
         self.assertEqual(len(response.data['members']), 1)
 
+    def test_create_group_with_password(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+            'password': '1234'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(response.data['members']), 1)
+        self.assertFalse('password' in response.data)
+
+
+    def test_create_group_with_too_long_password(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+            'password': '1234123412341234'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        response = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Group.objects.count(), 0)
+
+
     def test_create_group_with_no_name(self):
         login_data = {
             'username': 'testuser',
@@ -300,10 +337,96 @@ class AccountsTest(APITestCase):
         }
         user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
         self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
-        enter_res = self.client.get(reverse('enter-group', kwargs={'groupId': create_res.data['id']}))
+        enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': create_res.data['id']}))
         self.assertEqual(enter_res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(enter_res.data['members']), 2)
         self.assertEqual(enter_res.data['members'][-1]['username'], regis_data['username'])
+
+    def test_enter_group_with_password(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+            'password': '1234'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        create_res = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(create_res.data['members']), 1)
+        
+        regis_data = {
+            'username': 'foobar',
+            'email': 'foobarbaz@example.com',
+            'password': 'foobarpassword'
+        }
+        user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
+        data2 = {
+            'password': '1234'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
+        enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': create_res.data['id']}), data2, format='json')
+        self.assertEqual(enter_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(enter_res.data['members']), 2)
+        self.assertEqual(enter_res.data['members'][-1]['username'], regis_data['username'])
+
+    def test_enter_group_with_wrong_password(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+            'password': '1234'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        create_res = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(create_res.data['members']), 1)
+        
+        regis_data = {
+            'username': 'foobar',
+            'email': 'foobarbaz@example.com',
+            'password': 'foobarpassword'
+        }
+        user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
+        data2 = {
+            'password': '123'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
+        enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': create_res.data['id']}), data2, format='json')
+        self.assertEqual(enter_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_enter_group_with_empty_password(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+            'password': '1234'
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        create_res = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(create_res.data['members']), 1)
+        
+        regis_data = {
+            'username': 'foobar',
+            'email': 'foobarbaz@example.com',
+            'password': 'foobarpassword'
+        }
+        user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
+        enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': create_res.data['id']}), format='json')
+        self.assertEqual(enter_res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_enter_non_existing_group(self):
         login_data = {
@@ -327,7 +450,7 @@ class AccountsTest(APITestCase):
         }
         user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
         self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
-        enter_res = self.client.get(reverse('enter-group', kwargs={'groupId': 10}))
+        enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': 10}))
         self.assertEqual(enter_res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_leave_group(self):
@@ -345,7 +468,7 @@ class AccountsTest(APITestCase):
         self.assertEqual(Group.objects.count(), 1)
         self.assertEqual(len(create_res.data['members']), 1)
 
-        leave_res = self.client.delete(reverse('leave-group', kwargs={'groupId': create_res.data['id']}))
+        leave_res = self.client.get(reverse('leave-group', kwargs={'groupId': create_res.data['id']}))
         self.assertEqual(leave_res.status_code, status.HTTP_200_OK)
         self.assertEqual(Group.objects.count(), 0)
 
@@ -364,7 +487,7 @@ class AccountsTest(APITestCase):
         self.assertEqual(Group.objects.count(), 1)
         self.assertEqual(len(create_res.data['members']), 1)
 
-        leave_res = self.client.delete(reverse('leave-group', kwargs={'groupId': 10}))
+        leave_res = self.client.get(reverse('leave-group', kwargs={'groupId': 10}))
         self.assertEqual(leave_res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 1)
 

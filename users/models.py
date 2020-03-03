@@ -7,6 +7,7 @@ class Group(models.Model):
     users' group
     """
     name = models.CharField(max_length=255, unique=True)
+    password = models.CharField(max_length=12, null=True, blank=True)
 
 
 class MyUserManager(BaseUserManager):

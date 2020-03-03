@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import User, Group
+from problems.serializers import ProbGroupSerializer, ProbSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -42,8 +43,27 @@ class GroupSerializer(serializers.ModelSerializer):
         max_length=255,
         validators=[UniqueValidator(queryset=Group.objects.all())]
     )
+    password = serializers.CharField(allow_null=True, max_length=12, default=None, write_only=True)
     members = UserSerializer(read_only=True, many=True)
 
     class Meta:
         model = Group
-        fields = ('id', 'name', 'members')
+        fields = ('id', 'name', 'password', 'members')
+
+
+class InitialProfileSerializer(serializers.ModelSerializer):
+    group = GroupSerializer(many=True, read_only=True)
+    problem_groups = ProbGroupSerializer(many=True, read_only=True)
+    problems = ProbSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'name',
+            'group',
+            'problem_groups',
+            'problems',
+        )

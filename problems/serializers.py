@@ -32,6 +32,13 @@ class ProbSerializer(serializers.ModelSerializer):
         fields = ('id', 'origin', 'is_solved', 'solved_time', 'group', )
 
 
+class ProbGroupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProblemGroup
+        fields = ('id', 'name', 'problems', )
+
+
 class CopyProbSerializer(serializers.ModelSerializer):
 
     class Meta:

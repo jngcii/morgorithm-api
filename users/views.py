@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer, LogInSerializer, GroupSerializer
+from .serializers import UserSerializer, LogInSerializer, GroupSerializer, InitialProfileSerializer
 from .models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
@@ -19,9 +19,10 @@ class SignUp(APIView):
             user = serializer.save()
             if user:
                 token = Token.objects.create(user=user)
-                json = serializer.data
-                json['token'] = token.key
-                return Response(json, status=status.HTTP_201_CREATED)
+                new_serializer = InitialProfileSerializer(user)
+                new_json = new_serializer.data
+                new_json['token'] = token.key
+                return Response(new_json, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -50,9 +51,10 @@ class SignIn(APIView):
             user = self.get_user(request)
             if user:
                 token, _ = Token.objects.get_or_create(user=user)
-                json = serializer.data
-                json['token'] = token.key
-                return Response(json, status=status.HTTP_200_OK)
+                new_serializer = InitialProfileSerializer(user)
+                new_json = new_serializer.data
+                new_json['token'] = token.key
+                return Response(new_json, status=status.HTTP_200_OK)
         
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -63,7 +65,7 @@ class CreateGroup(APIView):
     """
     def post(self, request):
         user = request.user
-        if user.group.count()>=5:
+        if user.group.count() >= 5:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         serializer = GroupSerializer(data=request.data)
@@ -74,7 +76,7 @@ class CreateGroup(APIView):
                 group.save()
                 new_serializer = GroupSerializer(group)
                 return Response(new_serializer.data, status=status.HTTP_201_CREATED)
-        
+                
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -82,7 +84,7 @@ class EnterGroup(APIView):
     """
     Enter the group
     """
-    def get(self, request, groupId):
+    def post(self, request, groupId):
         user = request.user
 
         try:
@@ -90,6 +92,12 @@ class EnterGroup(APIView):
         except Group.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
+        if group.password:
+            if not request.data.get('password', None):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if group.password != request.data['password']:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
         group.members.add(user)
         group.save()
         serializer = GroupSerializer(group)
@@ -100,7 +108,7 @@ class LeaveGroup(APIView):
     """
     Leave the group
     """
-    def delete(self, request, groupId):
+    def get(self, request, groupId):
         user = request.user
 
         try:
