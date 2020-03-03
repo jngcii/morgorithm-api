@@ -279,7 +279,6 @@ class AccountsTest(APITestCase):
         self.assertEqual(Group.objects.count(), 0)
 
     def test_enter_group(self):
-
         login_data = {
             'username': 'testuser',
             'password': 'testpassword'
@@ -305,3 +304,41 @@ class AccountsTest(APITestCase):
         self.assertEqual(enter_res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(enter_res.data['members']), 2)
         self.assertEqual(enter_res.data['members'][-1]['username'], regis_data['username'])
+
+    def test_leave_group(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        create_res = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(create_res.data['members']), 1)
+
+        leave_res = self.client.delete(reverse('leave-group', kwargs={'groupId': create_res.data['id']}))
+        self.assertEqual(leave_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Group.objects.count(), 0)
+
+    def test_leave_non_existing_group(self):
+        login_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        user_res = self.client.post(self.sign_in_url, login_data, format='json')
+        data = {
+            'name': 'testgroup',
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        create_res = self.client.post(self.create_group_url, data, format='json')
+        self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(create_res.data['members']), 1)
+
+        leave_res = self.client.delete(reverse('leave-group', kwargs={'groupId': 10}))
+        self.assertEqual(leave_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Group.objects.count(), 1)

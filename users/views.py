@@ -61,7 +61,6 @@ class CreateGroup(APIView):
     """ 
     Creates the group. 
     """
-
     def post(self, request):
         user = request.user
         if user.group.count()>=5:
@@ -83,9 +82,8 @@ class EnterGroup(APIView):
     """
     Enter the group
     """
-
-    def get(self, requset, groupId):
-        user = requset.user
+    def get(self, request, groupId):
+        user = request.user
 
         try:
             group = Group.objects.get(id=groupId)
@@ -96,3 +94,26 @@ class EnterGroup(APIView):
         group.save()
         serializer = GroupSerializer(group)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class LeaveGroup(APIView):
+    """
+    Leave the group
+    """
+    def delete(self, request, groupId):
+        user = request.user
+
+        try:
+            group = Group.objects.get(id=groupId)
+        except Group.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+            
+        res = group.members.remove(user)
+        if res == -1:
+            print('non')
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        group.save()
+
+        if group.members.count() == 0:
+            group.delete()
+        return Response(status=status.HTTP_200_OK)

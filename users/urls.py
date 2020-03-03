@@ -6,4 +6,5 @@ urlpatterns = [
     path('sign-in/', views.SignIn.as_view(), name='sign-in'),
     path('create-group/', views.CreateGroup.as_view(), name='create-group'),
     path('enter-group/<int:groupId>/', views.EnterGroup.as_view(), name='enter-group'),
+    path('leave-group/<int:groupId>/', views.LeaveGroup.as_view(), name='leave-group'),
 ]
