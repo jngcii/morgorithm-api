@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import Solution
 from users.models import User
 from rest_framework import status
-# from pprint import pprint
+from pprint import pprint
 
 class SolutionTest(APITestCase):
     def setUp(self):
@@ -119,7 +119,7 @@ class SolutionTest(APITestCase):
         self.assertEqual(Solution.objects.count(), 1)
 
         data2 = {
-            'solutionId': add_res.data['id']
+            'id': add_res.data['id']
         }
 
         delete_res = self.client.delete(self.solution_api_url, data2, format='json')
@@ -146,9 +146,93 @@ class SolutionTest(APITestCase):
         self.assertEqual(Solution.objects.count(), 1)
 
         data2 = {
-            'solutionId': 10
+            'id': 10
         }
 
         delete_res = self.client.delete(self.solution_api_url, data2, format='json')
         self.assertEqual(delete_res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Solution.objects.count(), 1)
+
+    def test_update_solution(self):
+        """
+        test deleting solution
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'caption': '뭐가 틀린지 모르겠어요.',
+            'lang': 'python',
+            'solved': False
+        }
+
+        add_res = self.client.post(self.solution_api_url, data, format='json')
+        self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+
+        data2 = {
+            'id': add_res.data['id'],
+            'code': """def multiple(a, b):
+            return a * b
+            """,
+            'caption': None,
+            'lang': 'python',
+            'solved': True
+        }
+
+        update_res = self.client.put(self.solution_api_url, data2, format='json')
+        self.assertEqual(update_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.count(), 1)
+        self.assertEqual(update_res.data['solved'], True)
+
+    def test_update_solution_with_no_info(self):
+        """
+        test deleting solution
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'caption': '뭐가 틀린지 모르겠어요.',
+            'lang': 'python',
+            'solved': False
+        }
+
+        add_res = self.client.post(self.solution_api_url, data, format='json')
+        self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+
+        data2 = {
+            'id': add_res.data['id'],
+        }
+
+        update_res = self.client.put(self.solution_api_url, data2, format='json')
+        self.assertEqual(update_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.count(), 1)
+        self.assertEqual(update_res.data['solved'], False)
+
+    def test_update_solution_with_no_solution_id(self):
+        """
+        test deleting solution
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'caption': '뭐가 틀린지 모르겠어요.',
+            'lang': 'python',
+            'solved': False
+        }
+
+        add_res = self.client.post(self.solution_api_url, data, format='json')
+        self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+
+        data2 = {
+        }
+
+        update_res = self.client.put(self.solution_api_url, data2, format='json')
+        self.assertEqual(update_res.status_code, status.HTTP_400_BAD_REQUEST)
