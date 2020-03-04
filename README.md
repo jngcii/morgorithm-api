@@ -26,7 +26,7 @@
 
 ### Original Problem
 - [x] add original problem
-- 나머지는 admin으로
+- [ ] *<span style="color: #DDD;">나머지는 admin으로</span>*
 
 ### Problem
 - [x] copy all original problem and get own problem
