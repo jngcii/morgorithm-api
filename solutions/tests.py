@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import Solution
 from users.models import User
 from rest_framework import status
-from pprint import pprint
+# from pprint import pprint
 
 class SolutionTest(APITestCase):
     def setUp(self):
@@ -13,7 +13,7 @@ class SolutionTest(APITestCase):
         self.sign_in_url = reverse('sign-in')
         self.add_origin_prob_url = reverse('add-origin-prob')
         self.copy_and_get_props_url = reverse('copy-and-get-probs')
-        self.add_solution_url = reverse('add-solution')
+        self.solution_api_url = reverse('solution-api')
 
         self.super_credential = {
             'username': 'root',
@@ -71,7 +71,7 @@ class SolutionTest(APITestCase):
             'solved': True
         }
 
-        response = self.client.post(self.add_solution_url, data, format='json')
+        response = self.client.post(self.solution_api_url, data, format='json')
         # pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Solution.objects.count(), 1)
@@ -79,7 +79,6 @@ class SolutionTest(APITestCase):
         self.assertFalse(response.data['caption'])
 
     def test_add_unsolved_solution(self):
-        # print(self.copy_res.data[0]['origin'])
         """
         test adding unsolved solution
         """
@@ -93,9 +92,36 @@ class SolutionTest(APITestCase):
             'solved': False
         }
 
-        response = self.client.post(self.add_solution_url, data, format='json')
+        response = self.client.post(self.solution_api_url, data, format='json')
         # pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Solution.objects.count(), 1)
         self.assertEqual(response.data['view'], 0)
         self.assertEqual(response.data['caption'], data['caption'])
+
+    def test_delete_solution(self):
+        """
+        test deleting solution
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'caption': '뭐가 틀린지 모르겠어요.',
+            'lang': 'python',
+            'solved': False
+        }
+
+        add_res = self.client.post(self.solution_api_url, data, format='json')
+        # pprint(add_res.data)
+        self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+
+        data2 = {
+            'solutionId': add_res.data['id']
+        }
+
+        delete_res = self.client.delete(self.solution_api_url, data2, format='json')
+        self.assertEqual(delete_res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Solution.objects.count(), 0)
