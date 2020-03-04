@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import User, Group
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-import pprint
+# import pprint
 
 class AccountsTest(APITestCase):
     def setUp(self):
@@ -12,6 +12,7 @@ class AccountsTest(APITestCase):
         # URL for creating an account.
         self.sign_up_url = reverse('sign-up')
         self.sign_in_url = reverse('sign-in')
+        self.change_password_url = reverse('change-password')
         self.create_group_url = reverse('create-group')
 
         # We want to go ahead and originally create a user. 
@@ -37,7 +38,7 @@ class AccountsTest(APITestCase):
         token = Token.objects.get(user=user)
         self.assertEqual(response.data['token'], token.key)
 
-        pprint.pprint(response.data)
+        # pprint.pprint(response.data)
 
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -67,6 +68,98 @@ class AccountsTest(APITestCase):
 
         response = self.client.post(self.sign_in_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_change_password(self):
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+
+        login_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+
+        data = {
+            'old_password': 'testpassword',
+            'new_password': 'mypassword'
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        change_res = self.client.post(self.change_password_url, data, format='json')
+        self.assertEqual(change_res.status_code, status.HTTP_200_OK)
+
+    def test_change_password_with_too_short_password(self):
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+
+        login_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+
+        data = {
+            'old_password': 'testpassword',
+            'new_password': 'pw'
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        change_res = self.client.post(self.change_password_url, data, format='json')
+        self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_change_password_with_too_long_password(self):
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+
+        login_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+
+        data = {
+            'old_password': 'testpassword',
+            'new_password': 'password'*20
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        change_res = self.client.post(self.change_password_url, data, format='json')
+        self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_change_password_with_wrong_password(self):
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+
+        login_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+
+        data = {
+            'old_password': 'pw',
+            'new_password': 'password'
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        change_res = self.client.post(self.change_password_url, data, format='json')
+        self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_change_password_with_no_field(self):
+        user_data = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+
+        login_res = self.client.post(self.sign_in_url, user_data, format='json')
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
+
+        data = {}
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        change_res = self.client.post(self.change_password_url, data, format='json')
+        self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_user(self):
         """

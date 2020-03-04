@@ -59,6 +59,32 @@ class SignIn(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class ChangePassword(APIView):
+    """
+    Password Change
+    """
+
+    def post(self, request):
+        user = request.user
+
+        old_pw = request.data.get('old_password', None)
+        new_pw = request.data.get('new_password', None)
+
+        if old_pw is None or new_pw is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        old_check = user.check_password(old_pw)
+        
+        if not old_check:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if len(new_pw) < 8 or len(new_pw) > 25:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        user.set_password(new_pw)
+        return Response(status=status.HTTP_200_OK)
+
+
 class CreateGroup(APIView):
     """ 
     Creates the group. 

@@ -3,7 +3,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import Solution
 from users.models import User
 from rest_framework import status
-from pprint import pprint
+# from pprint import pprint
 
 class SolutionTest(APITestCase):
     def setUp(self):

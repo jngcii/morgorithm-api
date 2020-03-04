@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/Users/jngcii/.local/share/virtualenvs/hmc-1RbAxpVM/bin/python"
+    "python.pythonPath": "/Users/jngcii/.local/share/virtualenvs/hmc-1RbAxpVM/bin/python",
+    "python.linting.enabled": true
 }
