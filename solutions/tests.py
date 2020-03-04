@@ -125,3 +125,30 @@ class SolutionTest(APITestCase):
         delete_res = self.client.delete(self.solution_api_url, data2, format='json')
         self.assertEqual(delete_res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Solution.objects.count(), 0)
+
+    def test_delete_solution_with_wrong_solution_id(self):
+        """
+        test deleting solution
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'caption': '뭐가 틀린지 모르겠어요.',
+            'lang': 'python',
+            'solved': False
+        }
+
+        add_res = self.client.post(self.solution_api_url, data, format='json')
+        # pprint(add_res.data)
+        self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+
+        data2 = {
+            'solutionId': 10
+        }
+
+        delete_res = self.client.delete(self.solution_api_url, data2, format='json')
+        self.assertEqual(delete_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Solution.objects.count(), 1)
