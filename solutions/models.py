@@ -32,6 +32,7 @@ class Solution(TimeStampedModel):
     lang = models.CharField(max_length=255, choices=LANG_CHOICES)
     caption = models.TextField(null=True, blank=True)
     view = models.IntegerField(default=0)
+    good = models.IntegerField(default=0)
     solved = models.BooleanField()
 
     @property
