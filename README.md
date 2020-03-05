@@ -50,7 +50,6 @@
 ### Solution
 - [x] add solution to original problem
 - [x] modify own solution <- **bad**
-- [ ] change (modify own solution) to (if solved, add another solution solved and not change unsolved problem:)
 - [x] delete own solution
 - [ ] make good count field to solution model
 - [ ] view count + 1

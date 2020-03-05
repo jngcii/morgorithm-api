@@ -41,7 +41,7 @@ class SolutionAPI(APIView):
         if 'id' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            found_solution = Solution.objects.get(id=request.data['id'])
+            found_solution = Solution.objects.get(id=request.data['id'], creator=request.user)
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -65,10 +65,21 @@ class SolutionAPI(APIView):
         if 'id' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            solution = Solution.objects.get(id=request.data['id'])
+            solution = Solution.objects.get(id=request.data['id'], creator=request.user)
             solution.delete()
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class ViewCount(APIView):
+
+    def get(self, request, solutionId):
+
+        try:
+            solution = Solution.objects.get(id=solutionId)
+            solution.view += 1
+            solution.save()
+            return Response(status=status.HTTP_200_OK)
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

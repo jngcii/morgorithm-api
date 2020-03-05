@@ -236,3 +236,49 @@ class SolutionTest(APITestCase):
 
         update_res = self.client.put(self.solution_api_url, data2, format='json')
         self.assertEqual(update_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_view_count(self):
+        """
+        test view count
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'lang': 'python',
+            'solved': True
+        }
+
+        response = self.client.post(self.solution_api_url, data, format='json')
+        # pprint(response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+        self.assertEqual(response.data['view'], 0)
+        
+        sol_res = self.client.get(reverse('view-solution', kwargs={'solutionId': response.data['id']}))
+        self.assertEqual(sol_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.get(id=response.data['id']).view, 1)
+
+    def test_view_count_with_invalid_id(self):
+        """
+        test view count
+        """
+        data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'lang': 'python',
+            'solved': True
+        }
+
+        response = self.client.post(self.solution_api_url, data, format='json')
+        # pprint(response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Solution.objects.count(), 1)
+        self.assertEqual(response.data['view'], 0)
+        
+        sol_res = self.client.get(reverse('view-solution', kwargs={'solutionId': 15}))
+        self.assertEqual(sol_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Solution.objects.get(id=response.data['id']).view, 0)
