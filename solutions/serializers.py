@@ -5,7 +5,6 @@ from .models import Solution
 class SolutionSerializer(serializers.ModelSerializer):
     caption = serializers.CharField(allow_null=True, default=None)
     view = serializers.IntegerField(default=0)
-    good = serializers.IntegerField(default=0)
 
     class Meta:
         model = Solution
@@ -16,7 +15,6 @@ class SolutionSerializer(serializers.ModelSerializer):
             'lang',
             'caption',
             'view',
-            'good',
             'solved',
         )
 
