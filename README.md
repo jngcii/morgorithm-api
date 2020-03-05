@@ -51,9 +51,9 @@
 - [x] add solution to original problem
 - [x] modify own solution <- **bad**
 - [x] delete own solution
-- [ ] make good count field to solution model
-- [ ] view count + 1
-- [ ] good count + 1
+- [x] view count + 1
+- [ ] make like model and like count property field to solution model
+- [ ] like count + 1
 - [ ] get solutions of own group users from own problem's original problem
 
 ### Comment
