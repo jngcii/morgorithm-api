@@ -1,10 +1,20 @@
 from rest_framework import serializers
 from .models import Solution
+from users.models import User
+
+
+class CreatorSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'name')
 
 
 class SolutionSerializer(serializers.ModelSerializer):
     caption = serializers.CharField(allow_null=True, default=None)
     view = serializers.IntegerField(default=0)
+    likes = CreatorSerializer(required=False, many=True)
 
     class Meta:
         model = Solution
@@ -16,6 +26,7 @@ class SolutionSerializer(serializers.ModelSerializer):
             'caption',
             'view',
             'solved',
+            'likes',
             'like_count',
             'comment_count',
         )

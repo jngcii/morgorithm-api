@@ -282,3 +282,33 @@ class SolutionTest(APITestCase):
         sol_res = self.client.get(reverse('view-solution', kwargs={'solutionId': 15}))
         self.assertEqual(sol_res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Solution.objects.get(id=response.data['id']).view, 0)
+
+    def test_like_unlike_solution(self):
+        """
+        test like solution and unlike solution
+        """
+        self.test_add_solved_solution()
+        solution = Solution.objects.latest('id')
+        like_res = self.client.get(reverse('like-solution', kwargs={'solutionId': solution.id}))
+        self.assertEqual(like_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.get(id=solution.id).like_count, 1)
+
+        unlike_res = self.client.get(reverse('unlike-solution', kwargs={'solutionId': solution.id}))
+        self.assertEqual(unlike_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.get(id=solution.id).like_count, 0)
+    
+    def test_double_like_unlike_solution(self):
+        """
+        test like solution and unlike solution
+        """
+        self.test_add_solved_solution()
+        solution = Solution.objects.latest('id')
+        self.client.get(reverse('like-solution', kwargs={'solutionId': solution.id}))
+        like_res = self.client.get(reverse('like-solution', kwargs={'solutionId': solution.id}))
+        self.assertEqual(like_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.get(id=solution.id).like_count, 1)
+
+        self.client.get(reverse('unlike-solution', kwargs={'solutionId': solution.id}))
+        unlike_res = self.client.get(reverse('unlike-solution', kwargs={'solutionId': solution.id}))
+        self.assertEqual(unlike_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(Solution.objects.get(id=solution.id).like_count, 0)

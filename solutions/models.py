@@ -33,6 +33,7 @@ class Solution(TimeStampedModel):
     caption = models.TextField(null=True, blank=True)
     view = models.IntegerField(default=0)
     solved = models.BooleanField()
+    likes = models.ManyToManyField(User, blank=True, related_name='solution_likes')
 
     @property
     def natural_time(self):
@@ -54,6 +55,7 @@ class Comment(TimeStampedModel):
     solution = models.ForeignKey(Solution, on_delete=models.CASCADE, related_name='comments')
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     message = models.TextField()
+    likes = models.ManyToManyField(User, blank=True, related_name='comment_likes')
 
     @property
     def natural_time(self):
@@ -62,18 +64,3 @@ class Comment(TimeStampedModel):
     @property
     def like_count(self):
         return self.likes.all().count()
-
-
-class SolutionLike(TimeStampedModel):
-    """
-    model of like solution
-    """
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solution_likes')
-    solution = models.ForeignKey(Solution, on_delete=models.CASCADE, related_name='likes')
-
-class CommentLike(TimeStampedModel):
-    """
-    model of like comment
-    """
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comment_likes')
-    solution = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes')

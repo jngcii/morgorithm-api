@@ -83,3 +83,36 @@ class ViewCount(APIView):
             return Response(status=status.HTTP_200_OK)
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class LikeSolution(APIView):
+
+    def get(self, request, solutionId):
+
+        user = request.user
+
+        try:
+            found_solution = Solution.objects.get(id=solutionId)
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        found_solution.likes.add(user)
+        found_solution.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class UnlikeSolution(APIView):
+
+    def get(self, request, solutionId):
+
+        user = request.user
+
+        try:
+            found_solution = Solution.objects.get(id=solutionId)
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        found_solution.likes.remove(user)
+        found_solution.save()
+
+        return Response(status=status.HTTP_200_OK)
