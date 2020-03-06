@@ -52,7 +52,7 @@
 - [x] modify own solution <- **bad**
 - [x] delete own solution
 - [x] view count + 1
-- [ ] make like model and like count property field to solution model
+- [x] make like model and like count property field to solution model
 - [ ] like count + 1
 - [ ] get solutions of own group users from own problem's original problem
 

@@ -16,6 +16,8 @@ class SolutionSerializer(serializers.ModelSerializer):
             'caption',
             'view',
             'solved',
+            'like_count',
+            'comment_count',
         )
 
 
@@ -33,4 +35,6 @@ class SolutionUpdateSerializer(serializers.ModelSerializer):
             'lang',
             'caption',
             'solved',
+            'like_count',
+            'comment_count',
         )

@@ -37,6 +37,14 @@ class Solution(TimeStampedModel):
     @property
     def natural_time(self):
         return naturaltime(self.created_at)
+
+    @property
+    def comment_count(self):
+        return self.comments.all().count()
+
+    @property
+    def like_count(self):
+        return self.likes.all().count()
     
 
 class Comment(TimeStampedModel):
@@ -50,3 +58,22 @@ class Comment(TimeStampedModel):
     @property
     def natural_time(self):
         return naturaltime(self.created_at)
+
+    @property
+    def like_count(self):
+        return self.likes.all().count()
+
+
+class SolutionLike(TimeStampedModel):
+    """
+    model of like solution
+    """
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solution_likes')
+    solution = models.ForeignKey(Solution, on_delete=models.CASCADE, related_name='likes')
+
+class CommentLike(TimeStampedModel):
+    """
+    model of like comment
+    """
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comment_likes')
+    solution = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes')
