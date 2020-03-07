@@ -13,7 +13,7 @@ from problems.models import OriginProb
 # from pprint import pprint
 
 
-class GetAllSolution(APIView):
+class GetAllSolutions(APIView):
     """
     get all solutions of origin problem only whose own group's user
     """
@@ -33,6 +33,22 @@ class GetAllSolution(APIView):
         serializer = MiniSolutionSerializer(found_solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
+
+class GetAllQuestions(APIView):
+    """
+    get all questions only whose own group's user
+    """
+    def get(self, request):
+        user = request.user
+        my_group = set()
+        groups = user.group.all()
+        for group in groups:
+            my_group |= set(group.members.values_list('id', flat=True))
+
+        solutions = Solution.objects.filter(creator__id__in=my_group).filter(solved=False)
+        serializer = MiniSolutionSerializer(solutions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class GetSolution(APIView):

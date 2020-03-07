@@ -18,6 +18,7 @@
 - [x] leave group
 - [x] search group
 - [ ] get questions (unsolved solutions from group's members)
+- [ ] search questions
 
 
 <br />

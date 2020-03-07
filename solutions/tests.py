@@ -538,3 +538,14 @@ class GetSolutionTest(APITestCase):
         response = self.client.get(reverse('get-all-solutions', kwargs={'originId': self.copy_res.data[0]['id']}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
+
+    def test_get_all_questions(self):
+        """
+        test get all questions
+        """
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        response = self.client.get(reverse('get-all-questions'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['creator']['username'], self.user_data_3['username'])
+        self.assertEqual(response.data[0]['solved'], False)
+        self.assertEqual(len(response.data), 1)
