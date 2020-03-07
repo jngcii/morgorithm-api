@@ -57,7 +57,7 @@
 - [ ] get solutions of own group users from own problem's original problem
 
 ### Comment
-- [ ] add comment to solution
-- [ ] modify own comment
-- [ ] delete comment (comment owner, solution owner)
+- [x] add comment to solution
+- [x] modify own comment
+- [x] delete comment (comment owner, solution owner)
 - [ ] get comments of solutions (get solutions에 넣을지 말지 결정)
