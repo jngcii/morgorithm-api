@@ -53,7 +53,7 @@
 - [x] delete own solution
 - [x] view count + 1
 - [x] make like model and like count property field to solution model
-- [ ] like count + 1
+- [x] like count + 1
 - [ ] get solutions of own group users from own problem's original problem
 
 ### Comment

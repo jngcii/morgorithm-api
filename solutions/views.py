@@ -1,13 +1,18 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import SolutionSerializer, SolutionUpdateSerializer
-from .models import Solution
+from .serializers import (
+    CommentSerializer,
+    CommentUpdateSerializer,
+    SolutionSerializer,
+    SolutionUpdateSerializer
+)
+from .models import Solution, Comment
 
 
 class SolutionAPI(APIView):
     """
-    Add solution
+    Solution APIs
     """
     def post(self, request):
         """
@@ -55,7 +60,6 @@ class SolutionAPI(APIView):
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-
     
     def delete(self, request):
         """
@@ -72,6 +76,65 @@ class SolutionAPI(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class CommentAPI(APIView):
+    """
+    Comment APIs
+    """
+    def post(self, request):
+        """
+        ### request data
+        - solution id
+        - message
+        """
+        user = request.user
+        serializer = CommentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save(creator=user)
+            if comment:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        """
+        ### request data
+        - comment id
+        - message
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_comment = Comment.objects.get(id=request.data['id'])
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = CommentUpdateSerializer(found_comment, data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save()
+            if comment:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        """
+        ### request data
+        - comment id
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_comment = Comment.objects.get(id=request.data['id'])
+            found_comment.delete()
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ViewCount(APIView):
 
     def get(self, request, solutionId):
@@ -83,6 +146,7 @@ class ViewCount(APIView):
             return Response(status=status.HTTP_200_OK)
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class LikeSolution(APIView):
 

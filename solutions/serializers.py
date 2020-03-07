@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Solution
+from .models import Solution, Comment
 from users.models import User
 
 
@@ -9,6 +9,32 @@ class CreatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'name')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    creator = CreatorSerializer(required=False)
+    likes = CreatorSerializer(required=False, many=True)
+    
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'solution',
+            'creator',
+            'message',
+            'likes',
+            'like_count',
+        )
+
+
+class CommentUpdateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'message',
+        )
 
 
 class SolutionSerializer(serializers.ModelSerializer):

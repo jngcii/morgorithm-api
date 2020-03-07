@@ -1,6 +1,6 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
-from .models import Solution
+from .models import Solution, Comment
 from users.models import User
 from rest_framework import status
 # from pprint import pprint
@@ -14,6 +14,7 @@ class SolutionTest(APITestCase):
         self.add_origin_prob_url = reverse('add-origin-prob')
         self.copy_and_get_props_url = reverse('copy-and-get-probs')
         self.solution_api_url = reverse('solution-api')
+        self.comment_api_url = reverse('comment-api')
 
         self.super_credential = {
             'username': 'root',
@@ -279,7 +280,7 @@ class SolutionTest(APITestCase):
         self.assertEqual(Solution.objects.count(), 1)
         self.assertEqual(response.data['view'], 0)
         
-        sol_res = self.client.get(reverse('view-solution', kwargs={'solutionId': 15}))
+        sol_res = self.client.get(reverse('view-solution', kwargs={'solutionId': 1111}))
         self.assertEqual(sol_res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Solution.objects.get(id=response.data['id']).view, 0)
 
@@ -312,3 +313,81 @@ class SolutionTest(APITestCase):
         unlike_res = self.client.get(reverse('unlike-solution', kwargs={'solutionId': solution.id}))
         self.assertEqual(unlike_res.status_code, status.HTTP_200_OK)
         self.assertEqual(Solution.objects.get(id=solution.id).like_count, 0)
+
+    def test_add_comment(self):
+        """
+        test adding comment
+        """
+        self.test_add_solved_solution()
+        solution = Solution.objects.latest('id')
+        data = {
+            'solution': solution.id,
+            'message': 'yay',
+        }
+        response = self.client.post(self.comment_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['message'], data['message'])
+        self.assertEqual(Comment.objects.all().count(), 1)
+
+    def test_add_comment_without_message(self):
+        """
+        test adding comment without message
+        """
+        self.test_add_solved_solution()
+        solution = Solution.objects.latest('id')
+        data = {
+            'solution': solution.id,
+            'message': '',
+        }
+        response = self.client.post(self.comment_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Comment.objects.all().count(), 0)
+
+    def test_modify_comment(self):
+        """
+        test modifying comment
+        """
+        self.test_add_comment()
+        comment = Comment.objects.latest('id')
+        data = {
+            'id': comment.id,
+            'message': 'modified!',
+        }
+        response = self.client.put(self.comment_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], data['message'])
+        self.assertEqual(Comment.objects.all().count(), 1)
+
+    def test_modify_comment_without_comment_id(self):
+        """
+        test modifying comment without comment id
+        """
+        self.test_add_comment()
+        data = {
+            'message': 'modified!',
+        }
+        response = self.client.put(self.comment_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Comment.objects.all().count(), 1)
+
+    def test_delete_comment(self):
+        """
+        test deleting comment
+        """
+        self.test_add_comment()
+        comment = Comment.objects.latest('id')
+        data = {
+            'id': comment.id,
+        }
+        response = self.client.delete(self.comment_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Comment.objects.all().count(), 0)
+
+    def test_delete_comment_without_comment_id(self):
+        """
+        test deleting comment
+        """
+        self.test_add_comment()
+        response = self.client.delete(self.comment_api_url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Comment.objects.all().count(), 1)
