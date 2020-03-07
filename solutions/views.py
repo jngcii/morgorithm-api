@@ -50,6 +50,26 @@ class GetAllQuestions(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class SearchQuestions(APIView):
+    """
+    search questions
+    """
+    def get(self, request, txt):
+        user = request.user
+        my_group = set()
+        groups = user.group.all()
+        for group in groups:
+            my_group |= set(group.members.values_list('id', flat=True))
+
+        solutions = set()
+        found_solutions = Solution.objects.filter(creator__id__in=my_group).filter(problem__title__icontains=txt).filter(solved=False)
+        solutions |= set(found_solutions)
+        if txt.isdigit():
+            found_solutions = Solution.objects.filter(creator__id__in=my_group).filter(problem__number=int(txt)).filter(solved=False)
+            solutions |= set(found_solutions)
+        serializer = MiniSolutionSerializer(solutions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class GetSolution(APIView):
     """

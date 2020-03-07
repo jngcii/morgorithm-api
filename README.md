@@ -17,8 +17,8 @@
 - [x] enter group
 - [x] leave group
 - [x] search group
-- [ ] get questions (unsolved solutions from group's members)
-- [ ] search questions
+- [x] get questions (unsolved solutions from group's members)
+- [x] search questions
 
 
 <br />

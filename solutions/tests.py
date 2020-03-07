@@ -549,3 +549,35 @@ class GetSolutionTest(APITestCase):
         self.assertEqual(response.data[0]['creator']['username'], self.user_data_3['username'])
         self.assertEqual(response.data[0]['solved'], False)
         self.assertEqual(len(response.data), 1)
+
+    def test_search_questions_by_title(self):
+        """
+        test search questions by title
+        """
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        response = self.client.get(reverse('search-questions', kwargs={'txt': '암호문'}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['creator']['username'], self.user_data_3['username'])
+        self.assertEqual(response.data[0]['solved'], False)
+
+    def test_search_questions_by_number(self):
+        """
+        test search questions by title
+        """
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        response = self.client.get(reverse('search-questions', kwargs={'txt': self.origin_prob_data['number']}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['creator']['username'], self.user_data_3['username'])
+        self.assertEqual(response.data[0]['solved'], False)
+
+    def test_search_questions_nonexisting_data(self):
+        """
+        test search questions by title
+        """
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        response = self.client.get(reverse('search-questions', kwargs={'txt': 2}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
