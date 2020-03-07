@@ -5,9 +5,34 @@ from .serializers import (
     CommentSerializer,
     CommentUpdateSerializer,
     SolutionSerializer,
-    SolutionUpdateSerializer
+    SolutionUpdateSerializer,
+    MiniSolutionSerializer,
 )
 from .models import Solution, Comment
+from problems.models import OriginProb
+# from pprint import pprint
+
+
+class GetAllSolution(APIView):
+    """
+    get all solutions of origin problem only whose own group's user
+    """
+    def get(self, request, originId):
+        user = request.user
+        my_group = set()
+        groups = user.group.all()
+        for group in groups:
+            my_group |= set(group.members.values_list('id', flat=True))
+
+        try:
+            origin_prob = OriginProb.objects.get(id=originId)
+        except OriginProb.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        found_solutions = origin_prob.solutions.filter(creator__id__in=my_group)
+        serializer = MiniSolutionSerializer(found_solutions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
 
 class GetSolution(APIView):

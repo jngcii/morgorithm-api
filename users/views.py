@@ -87,9 +87,13 @@ class ChangePassword(APIView):
 
 class CreateGroup(APIView):
     """ 
-    Creates the group. 
+    Creates the group
     """
     def post(self, request):
+        """
+        request data
+        - name
+        """
         user = request.user
         if user.group.count() >= 5:
             return Response(status=status.HTTP_400_BAD_REQUEST)

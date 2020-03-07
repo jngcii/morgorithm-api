@@ -148,7 +148,7 @@ class SolutionTest(APITestCase):
         self.assertEqual(Solution.objects.count(), 1)
 
         data2 = {
-            'id': 10
+            'id': 1000
         }
 
         delete_res = self.client.delete(self.solution_api_url, data2, format='json')
@@ -405,3 +405,136 @@ class SolutionTest(APITestCase):
         self.assertEqual(response.data['comment_count'], 1)
         self.assertEqual(len(response.data['likes']), 0)
         self.assertEqual(response.data['like_count'], 0)
+
+
+
+class GetSolutionTest(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        self.sign_up_url = reverse('sign-up')
+        self.sign_in_url = reverse('sign-in')
+        self.create_group_url = reverse('create-group')
+        self.add_origin_prob_url = reverse('add-origin-prob')
+        self.copy_and_get_props_url = reverse('copy-and-get-probs')
+        self.solution_api_url = reverse('solution-api')
+        self.comment_api_url = reverse('comment-api')
+
+        self.super_credential = {
+            'username': 'root',
+            'email': 'root@hmc.com',
+            'password': 'asdf1488'
+        }
+        self.super_user_data = {
+            'username': 'root',
+            'password': 'asdf1488'
+        }
+
+        self.credential_1 = {
+            'username': 'testuser1',
+            'email': 'test1@example.com',
+            'password': 'testpassword'
+        }
+        self.user_data_1 = {
+            'username': 'testuser1',
+            'password': 'testpassword'
+        }
+
+        self.credential_2 = {
+            'username': 'testuser2',
+            'email': 'test2@example.com',
+            'password': 'testpassword'
+        }
+        self.user_data_2 = {
+            'username': 'testuser2',
+            'password': 'testpassword'
+        }
+
+        self.credential_3 = {
+            'username': 'testuser3',
+            'email': 'test3@example.com',
+            'password': 'testpassword'
+        }
+        self.user_data_3 = {
+            'username': 'testuser3',
+            'password': 'testpassword'
+        }
+
+        self.credential_4 = {
+            'username': 'testuser4',
+            'email': 'test4@example.com',
+            'password': 'testpassword'
+        }
+        self.user_data_4 = {
+            'username': 'testuser4',
+            'password': 'testpassword'
+        }
+
+        User.objects.create_superuser(**self.super_credential)
+        User.objects.create_user(**self.credential_1)
+        User.objects.create_user(**self.credential_2)
+        User.objects.create_user(**self.credential_3)
+        User.objects.create_user(**self.credential_4)
+
+        self.test_superuser = self.client.post(self.sign_in_url, self.super_user_data, format='json')
+        self.test_user_1 = self.client.post(self.sign_in_url, self.user_data_1, format='json')
+        self.test_user_2 = self.client.post(self.sign_in_url, self.user_data_2, format='json')
+        self.test_user_3 = self.client.post(self.sign_in_url, self.user_data_3, format='json')
+        self.test_user_4 = self.client.post(self.sign_in_url, self.user_data_4, format='json')
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        self.group_res = self.client.post(self.create_group_url, {'name': 'testgroup'}, format='json')
+        self.assertEqual(self.group_res.status_code, status.HTTP_201_CREATED)
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_2.data['token']))
+        self.enter_res_2 = self.client.post(reverse('enter-group', kwargs={'groupId':self.group_res.data['id']}))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_3.data['token']))
+        self.enter_res_3 = self.client.post(reverse('enter-group', kwargs={'groupId':self.group_res.data['id']}))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_4.data['token']))
+        self.enter_res_4 = self.client.post(reverse('enter-group', kwargs={'groupId':self.group_res.data['id']}))
+
+        self.origin_prob_data = {
+            'url': 'https://www.acmicpc.net/problem/1339',
+            'number': 1339,
+            'category': 'BOJ',
+            'title': '[S/W 문제해결 기본] 8일차 - 암호문3'
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_superuser.data['token']))
+        self.client.post(self.add_origin_prob_url, self.origin_prob_data, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        self.copy_res = self.client.get(self.copy_and_get_props_url)
+        self.assertEqual(self.copy_res.status_code, status.HTTP_201_CREATED)
+
+        self.solved_data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """def add(a, b):
+            return a + b
+            """,
+            'lang': 'python',
+            'solved': True
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_2.data['token']))
+        response = self.client.post(self.solution_api_url, self.solved_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.unsolved_data = {
+            'problem': self.copy_res.data[0]['origin']['id'],
+            'code': """
+            print('oh no')
+            """,
+            'caption': '뭐가 틀린지 모르겠어요.',
+            'lang': 'python',
+            'solved': False
+        }
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_3.data['token']))
+        response = self.client.post(self.solution_api_url, self.unsolved_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_all_solutions(self):
+        """
+        test get all solutions
+        """
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
+        response = self.client.get(reverse('get-all-solutions', kwargs={'originId': self.copy_res.data[0]['id']}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)

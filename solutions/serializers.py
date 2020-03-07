@@ -11,6 +11,22 @@ class CreatorSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'name')
 
 
+class MiniSolutionSerializer(serializers.ModelSerializer):
+    creator = CreatorSerializer()
+
+    class Meta:
+        model = Solution
+        fields = (
+            'id',
+            'creator',
+            'lang',
+            'solved',
+            'view',
+            'comment_count',
+            'like_count',
+        )
+
+
 class CommentSerializer(serializers.ModelSerializer):
     creator = CreatorSerializer(required=False)
     likes = CreatorSerializer(required=False, many=True)
