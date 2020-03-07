@@ -10,6 +10,20 @@ from .serializers import (
 from .models import Solution, Comment
 
 
+class GetSolution(APIView):
+    """
+    get Solution
+    """
+    def get(self, request, solutionId):
+        try:
+            found_solution = Solution.objects.get(id=solutionId)
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = SolutionSerializer(found_solution)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class SolutionAPI(APIView):
     """
     Solution APIs

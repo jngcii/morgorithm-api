@@ -55,9 +55,10 @@
 - [x] make like model and like count property field to solution model
 - [x] like count + 1
 - [ ] get solutions of own group users from own problem's original problem
+- [x] get solution detail by solution Id
 
 ### Comment
 - [x] add comment to solution
 - [x] modify own comment
 - [x] delete comment (comment owner, solution owner)
-- [ ] get comments of solutions (get solutions에 넣을지 말지 결정)
+- [ ] add comments to get solutions serializer

@@ -78,6 +78,7 @@ class SolutionTest(APITestCase):
         self.assertEqual(Solution.objects.count(), 1)
         self.assertEqual(response.data['view'], 0)
         self.assertFalse(response.data['caption'])
+        self.assertEqual(len(response.data['comments']), 0)
 
     def test_add_unsolved_solution(self):
         """
@@ -391,3 +392,16 @@ class SolutionTest(APITestCase):
         response = self.client.delete(self.comment_api_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Comment.objects.all().count(), 1)
+
+    def test_get_solution(self):
+        """
+        test getting solution
+        """
+        self.test_add_comment()
+        solution = Solution.objects.latest('id')
+        response = self.client.get(reverse('get-solution', kwargs={'solutionId': solution.id}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['comments']), 1)
+        self.assertEqual(response.data['comment_count'], 1)
+        self.assertEqual(len(response.data['likes']), 0)
+        self.assertEqual(response.data['like_count'], 0)

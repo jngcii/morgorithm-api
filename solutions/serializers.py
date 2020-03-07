@@ -41,6 +41,7 @@ class SolutionSerializer(serializers.ModelSerializer):
     caption = serializers.CharField(allow_null=True, default=None)
     view = serializers.IntegerField(default=0)
     likes = CreatorSerializer(required=False, many=True)
+    comments = CommentSerializer(required=False, many=True)
 
     class Meta:
         model = Solution
@@ -54,6 +55,7 @@ class SolutionSerializer(serializers.ModelSerializer):
             'solved',
             'likes',
             'like_count',
+            'comments',
             'comment_count',
         )
 
