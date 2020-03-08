@@ -128,3 +128,48 @@ class ProblemGroupAPI(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ProblemGroup.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UploadProblemsToGroup(APIView):
+    """
+    add problems in problem group
+    """
+    def post(self, request):
+        """
+        request data
+        - id (problem group id)
+        - adding_problems (list of problems id)
+        - removing_problems (list of problems id)
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if 'adding_problems' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if 'removing_problems' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if type(request.data['adding_problems']) is not list or type(request.data['removing_problems']) is not list:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            group = ProblemGroup.objects.get(id=request.data['id'])
+        except ProblemGroup.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        for idx in request.data['adding_problems']:
+            try:
+                problem = Problem.objects.get(id=idx)
+                group.problems.add(problem)
+            except Problem.DoesNotExist:
+                continue
+        
+        for idx in request.data['removing_problems']:
+            try:
+                problem = Problem.objects.get(id=idx)
+                group.problems.remove(problem)
+            except Problem.DoesNotExist:
+                continue
+
+        group.save()
+        serializer = ProbGroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -31,9 +31,19 @@ class ProbSerializer(serializers.ModelSerializer):
         model = Problem
         fields = ('id', 'origin', 'is_solved', 'solved_time', 'group', )
 
+class ProblemIdSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Problem
+        fields = ('id', )
+
 
 class ProbGroupSerializer(serializers.ModelSerializer):
-    problems = serializers.CharField(required=False)
+    problems = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        required=False,
+        many=True
+    )
 
     class Meta:
         model = ProblemGroup
