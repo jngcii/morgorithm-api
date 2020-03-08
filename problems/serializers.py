@@ -33,6 +33,7 @@ class ProbSerializer(serializers.ModelSerializer):
 
 
 class ProbGroupSerializer(serializers.ModelSerializer):
+    problems = serializers.CharField(required=False)
 
     class Meta:
         model = ProblemGroup

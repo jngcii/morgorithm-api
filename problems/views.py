@@ -1,8 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import OriginProbSerializer, ProbSerializer, CopyProbSerializer
-from .models import OriginProb, Problem
+from .serializers import (
+    OriginProbSerializer,
+    ProbSerializer,
+    CopyProbSerializer,
+    ProbGroupSerializer,
+)
+from .models import OriginProb, Problem, ProblemGroup
 
 class AddOriginProb(APIView):
     """
@@ -66,3 +71,60 @@ class CopyAndGetProbs(APIView):
 
         serializer = ProbSerializer(all_probs, many=True)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProblemGroupAPI(APIView):
+    """
+    add, modify, delete problem group
+    """
+
+    def post(self, request):
+        """
+        request data
+        - name (group name)
+        """
+        user = request.user
+        if user.problem_groups.count() >= 5:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProbGroupSerializer(data=request.data)
+        if serializer.is_valid():
+            group = serializer.save(creator=user)
+            if group:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        """
+        request data
+        - id (prob group id)
+        - name (new group name)
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_group = ProblemGroup.objects.get(id=request.data['id'])
+        except ProblemGroup.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProbGroupSerializer(found_group, data=request.data)
+        if serializer.is_valid():
+            group = serializer.save()
+            if group:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        """
+        request data
+        - id (prob group id)
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_group = ProblemGroup.objects.get(id=request.data['id'])
+            found_group.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProblemGroup.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
