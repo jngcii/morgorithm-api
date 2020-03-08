@@ -27,21 +27,20 @@
 
 ### Original Problem
 - [x] add original problem
-- [ ] *<span style="color: #DDD;">나머지는 admin으로</span>*
+- [x] *<span styles="color: #DDD;">나머지는 admin으로</span>*
 
 ### Problem
 - [x] copy all original problem and get own problem
-- [ ] (위에 추가 혹은 예외 만들기) remove own problem when original problem removed
-- [ ] test get own problem when original problem deleted
-- [ ] update own problem when solution modified
-- [ ] (models, serializers) get problem count, solved_problem count, unsolved_problem count
+- [x] (위에 추가 혹은 예외 만들기) remove own problem when original problem removed
+- [x] test get own problem when original problem deleted
+- [x] update own problem when solution modified
 
 ### Problem Group
-- [ ] add Problem Group (limit count)
-- [ ] remove Problem Group
-- [ ] modify Problem Group
-- [ ] add own problems to problem group
-- [ ] test get group's problems when original problem deleted
+- [x] add Problem Group (limit count)
+- [x] remove Problem Group
+- [x] modify Problem Group
+- [x] add own problems to problem group
+- [x] (models, serializers) get problem count, solved_problem count, unsolved_problem count
 
 
 <br />

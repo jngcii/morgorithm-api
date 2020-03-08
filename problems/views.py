@@ -130,7 +130,7 @@ class ProblemGroupAPI(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class UploadProblemsToGroup(APIView):
+class UpdateProblemsToGroup(APIView):
     """
     add problems in problem group
     """

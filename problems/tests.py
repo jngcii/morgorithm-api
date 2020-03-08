@@ -353,7 +353,7 @@ class ProbGroupsTest(APITestCase):
         response = self.client.delete(reverse('problem-group-api'), data, format='json')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_upload_problems_to_group(self):
+    def test_update_problems_to_group(self):
         """
         test adding and removing problems to group
         """
@@ -369,7 +369,7 @@ class ProbGroupsTest(APITestCase):
             ],
             'removing_problems': [],
         }
-        response = self.client.post(reverse('upload-problems-to-group'), adding_data, format='json')
+        response = self.client.post(reverse('update-problems-to-group'), adding_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['problems']), 5)
 
@@ -381,7 +381,7 @@ class ProbGroupsTest(APITestCase):
                 self.copy_res_1.data[1]['id'],
             ],
         }
-        response = self.client.post(reverse('upload-problems-to-group'), removing_data, format='json')
+        response = self.client.post(reverse('update-problems-to-group'), removing_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['problems']), 3)
 
@@ -401,7 +401,7 @@ class ProbGroupsTest(APITestCase):
             ],
             'removing_problems': [],
         }
-        response = self.client.post(reverse('upload-problems-to-group'), adding_data, format='json')
+        response = self.client.post(reverse('update-problems-to-group'), adding_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['problems']), 1)
 
@@ -421,11 +421,11 @@ class ProbGroupsTest(APITestCase):
                 self.copy_res_1.data[0]['id'],
             ],
         }
-        response = self.client.post(reverse('upload-problems-to-group'), data, format='json')
+        response = self.client.post(reverse('update-problems-to-group'), data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['problems']), 0)
     
-    def test_upload_problems_to_group_without_group_id(self):
+    def test_update_problems_to_group_without_group_id(self):
         """
         test uplo9ad problems to group without group id
         """
@@ -434,10 +434,10 @@ class ProbGroupsTest(APITestCase):
             'adding_problems': [],
             'removing_problems': [],
         }
-        response = self.client.post(reverse('upload-problems-to-group'), data, format='json')
+        response = self.client.post(reverse('update-problems-to-group'), data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
-    def test_upload_problems_to_group_by_wrong_type(self):
+    def test_update_problems_to_group_by_wrong_type(self):
         """
         test uplo9ad problems to group by worng type
         """
@@ -446,5 +446,5 @@ class ProbGroupsTest(APITestCase):
             'adding_problems': 1,
             'removing_problems': 4,
         }
-        response = self.client.post(reverse('upload-problems-to-group'), data, format='json')
+        response = self.client.post(reverse('update-problems-to-group'), data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
