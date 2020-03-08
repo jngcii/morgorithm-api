@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from .models import Solution, Comment
+from problems.models import Problem
 from users.models import User
 from rest_framework import status
 # from pprint import pprint
@@ -72,10 +73,12 @@ class SolutionTest(APITestCase):
             'solved': True
         }
 
+        self.assertEqual(Problem.objects.latest('id').is_solved, False)
         response = self.client.post(self.solution_api_url, data, format='json')
         # pprint(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Solution.objects.count(), 1)
+        self.assertEqual(Problem.objects.latest('id').is_solved, True)
         self.assertEqual(response.data['view'], 0)
         self.assertFalse(response.data['caption'])
         self.assertEqual(len(response.data['comments']), 0)

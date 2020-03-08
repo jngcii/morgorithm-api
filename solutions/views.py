@@ -9,7 +9,7 @@ from .serializers import (
     MiniSolutionSerializer,
 )
 from .models import Solution, Comment
-from problems.models import OriginProb
+from problems.models import OriginProb, Problem
 # from pprint import pprint
 
 
@@ -104,6 +104,12 @@ class SolutionAPI(APIView):
         if serializer.is_valid():
             solution = serializer.save(creator=user)
             if solution:
+                if solution.solved:
+                    problem = Problem.objects.get(origin__id=solution.problem.id)
+                    if problem and not problem.is_solved:
+                        problem.is_solved = True
+                        problem.save()
+                
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
