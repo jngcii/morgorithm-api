@@ -6,6 +6,9 @@ from .models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from rest_auth.registration.views import SocialConnectView
+
 
 class SignUp(APIView):
     """ 
@@ -177,3 +180,8 @@ class SearchGroup(APIView):
         
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GoogleLogin(SocialConnectView):
+    permission_classes = [AllowAny]
+    adapter_class = GoogleOAuth2Adapter
