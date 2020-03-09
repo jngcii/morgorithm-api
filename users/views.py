@@ -34,10 +34,10 @@ class SignIn(APIView):
     permission_classes = [AllowAny]
 
     def get_user(self, request):
-        username = request.data['username']
+        email = request.data['email']
         password = request.data['password']
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(email=email)
             if user and user.check_password(password):
                 return user
             return None
@@ -45,6 +45,14 @@ class SignIn(APIView):
             return None
 
     def post(self, request):
+        if 'email' not in request.data and 'username' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif 'username' in request.data:
+            try:
+                email = User.objects.get(username=request.data['username']).email
+            except User.DoesNotExist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        request.data['email'] = email
         serializer = LogInSerializer(data=request.data)
 
         if serializer.is_valid():

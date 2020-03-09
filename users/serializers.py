@@ -29,12 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LogInSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True, max_length=32)
+    email = serializers.EmailField(max_length=255)
     password = serializers.CharField(min_length=8, write_only=True)
     
     class Meta:
         model = User
-        fields = ('username', 'password')
+        fields = ('email', 'password')
 
 
 class GroupSerializer(serializers.ModelSerializer):
