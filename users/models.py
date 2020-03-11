@@ -65,6 +65,7 @@ class User(AbstractBaseUser):
     group = models.ManyToManyField(Group, blank=True, related_name='members')
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    is_confirmed = models.BooleanField(default=False)
 
     objects = MyUserManager()
 
