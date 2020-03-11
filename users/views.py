@@ -1,11 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth import authenticate
 from .serializers import UserSerializer, LogInSerializer, GroupSerializer, InitialProfileSerializer
 from .models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-
+from django.template import loader
+from django.core.mail import send_mail
+from django.conf import settings
+import random
 
 class SignUp(APIView):
     """ 
@@ -33,37 +37,25 @@ class SignIn(APIView):
     """
     permission_classes = [AllowAny]
 
-    def get_user(self, request):
-        email = request.data['email']
-        password = request.data['password']
-        try:
-            user = User.objects.get(email=email)
-            if user and user.check_password(password):
-                return user
-            return None
-        except User.DoesNotExist:
-            return None
-
     def post(self, request):
         if 'email' not in request.data and 'username' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        elif 'username' in request.data:
+        if 'username' in request.data:
             try:
                 email = User.objects.get(username=request.data['username']).email
+                request.data['email'] = email
             except User.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-        request.data['email'] = email
         serializer = LogInSerializer(data=request.data)
 
         if serializer.is_valid():
-            user = self.get_user(request)
+            user = authenticate(email=request.data['email'], password=request.data['password'])
             if user:
                 token, _ = Token.objects.get_or_create(user=user)
                 new_serializer = InitialProfileSerializer(user)
                 new_json = new_serializer.data
                 new_json['token'] = token.key
                 return Response(new_json, status=status.HTTP_200_OK)
-        
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -156,7 +148,6 @@ class LeaveGroup(APIView):
             
         res = group.members.remove(user)
         if res == -1:
-            print('non')
             return Response(status=status.HTTP_400_BAD_REQUEST)
         group.save()
 
@@ -177,3 +168,45 @@ class SearchGroup(APIView):
         
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SendConfirmCode(APIView):
+    """
+    Send Confirm code
+    """
+    
+    def get(self, request):
+        user = request.user
+        code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
+        code = ''.join(code)
+
+        title = '[MORGORITHM] Confirm email'
+        from_mail_addr = settings.DEFAULT_FROM_EMAIL
+        to_mail_addr = user.email
+        html_msg = loader.render_to_string('email_template.html', {'code': code})
+
+        res = send_mail(
+            title,
+            '',
+            from_mail_addr,
+            # ['concotree@gmail.com'],
+            [to_mail_addr],
+            fail_silently=False,
+            html_message=html_msg
+        )
+
+        if res:
+            return Response({'confirm_code': code}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConfirmEmail(APIView):
+    """
+    Veirfy email
+    """
+    def get(self, request):
+        user = request.user
+        user.is_confirmed = True
+        user.save()
+        return Response(status=status.HTTP_200_OK)
+        
