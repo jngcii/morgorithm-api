@@ -6,7 +6,7 @@
 - [x] sign up
 - [x] sign in
 - [x] change password
-- [ ] verify email
+- [x] verify email
 - [ ] init password
 - [ ] update user profile (just name... )
 - [ ] get user's info
