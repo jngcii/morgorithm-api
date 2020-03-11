@@ -9,7 +9,6 @@ from .models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 
-
 class SignUp(APIView):
     """ 
     Creates the user. 
@@ -212,5 +211,7 @@ class GoogleLoginView(APIView):
 
         google_response = requests.get(url, headers=headers)
         google_res = json.loads(google_response.text)
+
+        print(google_res)
 
         return Response(status=status.HTTP_200_OK)
