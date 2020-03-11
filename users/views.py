@@ -1,3 +1,6 @@
+import json
+import requests
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -177,3 +180,37 @@ class SearchGroup(APIView):
         
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GoogleLoginView(APIView):
+
+    def get(self, request):
+
+        google_access_code = request.GET.get('code', None)
+
+        url = 'https://kauth.kakao.com/oauth/token'
+
+        headers = {
+            'Content-type': 'application/x-www-urlencoded; charset=utf-8'
+        }
+        body = {
+            'grant_type': 'authorization_code',
+            'client_id': 'aghlasdf',
+            'redirect_uri': 'http://localhost',
+            'code': google_access_code
+        }
+
+        token_google_reponse = requests.post(url, headers=headers, data=body)
+        access_token = json.loads(token_google_reponse.text).get('access_token')
+
+        url = 'https://kapi.kakao.com/v2/user/me'
+
+        headers = {
+            'Authorization': 'Bearer {}'.format(access_token),
+            'Content-type': 'application/x-www-urlencoded; charset=utf-8'
+        }
+
+        google_response = requests.get(url, headers=headers)
+        google_res = json.loads(google_response.text)
+
+        return Response(status=status.HTTP_200_OK)
