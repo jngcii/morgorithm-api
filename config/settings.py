@@ -55,6 +55,7 @@ LOCAL_APPS = [
     'users.apps.UsersConfig',
     'problems.apps.ProblemsConfig',
     'solutions.apps.SolutionsConfig',
+    'notifications.apps.NotificationsConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
