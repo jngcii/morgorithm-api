@@ -169,26 +169,57 @@ class SearchGroup(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class CheckUnique(APIView):
+    permission_classes = [AllowAny]
+    """
+    Check email unqiue
+    """
+    def post(self, request):
+        """
+        request data
+        - username or email
+        """
+        print(request.data)
+        if 'email' in request.data:
+            try:
+                User.objects.get(email=request.data['email'])
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                return Response(status=status.HTTP_200_OK)
+        elif 'username' in request.data:
+            try:
+                User.objects.get(username=request.data['username'])
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            except User.DoesNotExist:
+                return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 class SendConfirmCode(APIView):
+    permission_classes = [AllowAny]
     """
     Send Confirm code
     """
     
-    def get(self, request):
-        user = request.user
+    def post(self, request):
+        """
+        request data
+        - email
+        """
         code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
         code = ''.join(code)
 
         title = '[MORGORITHM] Confirm email'
         from_mail_addr = settings.DEFAULT_FROM_EMAIL
-        to_mail_addr = user.email
+        to_mail_addr = request.data['email']
         html_msg = loader.render_to_string('email_template.html', {'code': code})
 
         res = send_mail(
             title,
             '',
             from_mail_addr,
-            # ['concotree@gmail.com'],
             [to_mail_addr],
             fail_silently=False,
             html_message=html_msg
