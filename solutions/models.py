@@ -63,4 +63,21 @@ class Comment(TimeStampedModel):
 
     @property
     def like_count(self):
-        return self.likes.all().count()
+        return self.likes.count()
+
+class SubComment(TimeStampedModel):
+    """
+    model of sub comment
+    """
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='sub_comments')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sub_comments')
+    message = models.TextField()
+    likes = models.ManyToManyField(User, blank=True, related_name='sub_comment_likes')
+
+    @property
+    def natural_time(self):
+        return naturaltime(self.created_at)
+
+    @property
+    def like_count(self):
+        return self.likes.count()
