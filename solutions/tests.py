@@ -16,6 +16,7 @@ class SolutionTest(APITestCase):
         self.copy_and_get_props_url = reverse('copy-and-get-probs')
         self.solution_api_url = reverse('solution-api')
         self.comment_api_url = reverse('comment-api')
+        self.sub_comment_api_url = reverse('sub-comment-api')
 
         self.super_credential = {
             'username': 'root',
@@ -394,6 +395,21 @@ class SolutionTest(APITestCase):
         self.test_add_comment()
         response = self.client.delete(self.comment_api_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Comment.objects.all().count(), 1)
+
+    def test_sub_add_comment(self):
+        """
+        test adding comment
+        """
+        self.test_add_comment()
+        comment = Comment.objects.latest('id')
+        data = {
+            'comment': comment.id,
+            'message': 'yayay',
+        }
+        response = self.client.post(self.sub_comment_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['message'], data['message'])
         self.assertEqual(Comment.objects.all().count(), 1)
 
     def test_get_solution(self):
