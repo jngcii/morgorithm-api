@@ -47,7 +47,6 @@ class SignIn(APIView):
             except User.DoesNotExist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = LogInSerializer(data=request.data)
-
         if serializer.is_valid():
             user = authenticate(email=request.data['email'], password=request.data['password'])
             if user:
