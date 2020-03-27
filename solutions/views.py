@@ -2,13 +2,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import (
+    SubCommentSerializer,
+    SubCommentUpdateSerializer,
     CommentSerializer,
     CommentUpdateSerializer,
     SolutionSerializer,
     SolutionUpdateSerializer,
     MiniSolutionSerializer,
 )
-from .models import Solution, Comment
+from .models import Solution, Comment, SubComment
 from problems.models import OriginProb, Problem
 # from pprint import pprint
 
@@ -209,6 +211,65 @@ class CommentAPI(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
             found_comment = Comment.objects.get(id=request.data['id'])
+            found_comment.delete()
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+class SubCommentAPI(APIView):
+    """
+    Comment APIs
+    """
+    def post(self, request):
+        """
+        ### request data
+        - comment id
+        - message
+        """
+        user = request.user
+        serializer = SubCommentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save(creator=user)
+            if comment:
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        """
+        ### request data
+        - comment id
+        - message
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_comment = SubComment.objects.get(id=request.data['id'])
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = SubCommentUpdateSerializer(found_comment, data=request.data)
+
+        if serializer.is_valid():
+            comment = serializer.save()
+            if comment:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        """
+        ### request data
+        - comment id
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_comment = SubComment.objects.get(id=request.data['id'])
             found_comment.delete()
         except Comment.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)

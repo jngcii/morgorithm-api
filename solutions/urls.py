@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('solution-api/', views.SolutionAPI.as_view(), name='solution-api'),
     path('comment-api/', views.CommentAPI.as_view(), name='comment-api'),
+    path('sub-comment-api/', views.SubCommentAPI.as_view(), name='sub-comment-api'),
     path('get-all-questions/', views.GetAllQuestions.as_view(), name='get-all-questions'),
     path('get-all-solutions/<int:originId>/', views.GetAllSolutions.as_view(), name='get-all-solutions'),
     path('get-solution/<int:solutionId>/', views.GetSolution.as_view(), name='get-solution'),

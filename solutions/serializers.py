@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Solution, Comment
+from .models import Solution, Comment, SubComment
 from users.models import User
 
 
@@ -27,9 +27,36 @@ class MiniSolutionSerializer(serializers.ModelSerializer):
         )
 
 
+class SubCommentSerializer(serializers.ModelSerializer):
+    creator = CreatorSerializer(required=False)
+    likes = CreatorSerializer(required=False, many=True)
+    
+    class Meta:
+        model = SubComment
+        fields = (
+            'id',
+            'comment',
+            'creator',
+            'message',
+            'likes',
+            'like_count',
+        )
+
+
+class SubCommentUpdateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = SubComment
+        fields = (
+            'id',
+            'message',
+        )
+
+
 class CommentSerializer(serializers.ModelSerializer):
     creator = CreatorSerializer(required=False)
     likes = CreatorSerializer(required=False, many=True)
+    sub_comments = SubCommentSerializer(required=False, many=True)
     
     class Meta:
         model = Comment
@@ -40,6 +67,7 @@ class CommentSerializer(serializers.ModelSerializer):
             'message',
             'likes',
             'like_count',
+            'sub_comments',
         )
 
 
