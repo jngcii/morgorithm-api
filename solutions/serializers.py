@@ -84,6 +84,7 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
 class SolutionSerializer(serializers.ModelSerializer):
     caption = serializers.CharField(allow_null=True, default=None)
     view = serializers.IntegerField(default=0)
+    creator = CreatorSerializer(required=False, read_only=True)
     likes = CreatorSerializer(required=False, many=True)
     comments = CommentSerializer(required=False, many=True)
 
@@ -91,6 +92,7 @@ class SolutionSerializer(serializers.ModelSerializer):
         model = Solution
         fields = (
             'id',
+            'creator',
             'problem',
             'code',
             'lang',

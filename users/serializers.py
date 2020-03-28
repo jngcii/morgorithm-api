@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import User, Group
 from problems.serializers import ProbGroupSerializer, ProbSerializer
+from solutions.serializers import MiniSolutionSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -51,6 +52,7 @@ class InitialProfileSerializer(serializers.ModelSerializer):
     group = GroupSerializer(many=True, read_only=True)
     problem_groups = ProbGroupSerializer(many=True, read_only=True)
     problems = ProbSerializer(many=True, read_only=True)
+    solutions = MiniSolutionSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
@@ -62,4 +64,8 @@ class InitialProfileSerializer(serializers.ModelSerializer):
             'group',
             'problem_groups',
             'problems',
+            'solutions',
+            'problems_count',
+            'solved_problems_count',
+            'questions_count',
         )

@@ -27,11 +27,11 @@ class ProbSerializer(serializers.ModelSerializer):
     origin = OriginProbSerializer()
     is_solved = serializers.BooleanField(default=False)
     solved_time = serializers.DateTimeField(allow_null=True, default=None)
-    group = MiniGroupSerializer(read_only=True, many=True)
     
     class Meta:
         model = Problem
-        fields = ('id', 'origin', 'is_solved', 'solved_time', 'group', )
+        fields = ('id', 'origin', 'is_solved', 'solved_time',)
+
 
 class ProblemIdSerializer(serializers.ModelSerializer):
 
@@ -49,7 +49,7 @@ class ProbGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProblemGroup
-        fields = ('id', 'name', 'problems', )
+        fields = ('id', 'name', 'problems', 'problems_count', 'solved_problems_count',)
 
 
 class CopyProbSerializer(serializers.ModelSerializer):

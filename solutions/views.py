@@ -47,7 +47,7 @@ class GetAllQuestions(APIView):
         for group in groups:
             my_group |= set(group.members.values_list('id', flat=True))
 
-        solutions = Solution.objects.filter(creator__id__in=my_group).filter(solved=False)
+        solutions = Solution.objects.filter(solved=False).filter(creator__id__in=my_group)
         serializer = MiniSolutionSerializer(solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

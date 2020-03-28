@@ -9,6 +9,10 @@ class Group(models.Model):
     name = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=12, null=True, blank=True)
 
+    @property
+    def members_count(self):
+        return self.members.count()
+
 
 class MyUserManager(BaseUserManager):
     """
@@ -86,3 +90,15 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.username
+
+    @property
+    def problems_count(self):
+        return self.problems.count()
+    
+    @property
+    def solved_problems_count(self):
+        return self.problems.filter(is_solved=True).count()
+
+    @property
+    def questions_count(self):
+        return self.solutions.filter(solved=False).count()
