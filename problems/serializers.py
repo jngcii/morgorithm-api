@@ -5,7 +5,7 @@ from .models import OriginProb, ProblemGroup, Problem
 class OriginProbSerializer(serializers.ModelSerializer):
     level = serializers.IntegerField(allow_null=True, default=None)
     url = serializers.URLField(required=True)
-    number = serializers.IntegerField(allow_null=True, default=None)
+    number = serializers.IntegerField(allow_null=True, required=False, default=None)
     category = serializers.CharField(max_length=255)
     title = serializers.CharField(max_length=255, required=True)
     remark = serializers.CharField(max_length=255, required=False, allow_null=True)
