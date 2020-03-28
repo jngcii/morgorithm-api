@@ -8,10 +8,12 @@ class OriginProbSerializer(serializers.ModelSerializer):
     number = serializers.IntegerField(allow_null=True, default=None)
     category = serializers.CharField(max_length=255)
     title = serializers.CharField(max_length=255, required=True)
+    remark = serializers.CharField(max_length=255, required=False, allow_null=True)
+
 
     class Meta:
         model = OriginProb
-        fields = ('id', 'level', 'url', 'number', 'category', 'title', )
+        fields = ('id', 'level', 'url', 'number', 'category', 'title', 'remark',)
 
 
 class MiniGroupSerializer(serializers.ModelSerializer):

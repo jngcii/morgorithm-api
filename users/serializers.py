@@ -62,5 +62,4 @@ class InitialProfileSerializer(serializers.ModelSerializer):
             'group',
             'problem_groups',
             'problems',
-            'is_confirmed',
         )

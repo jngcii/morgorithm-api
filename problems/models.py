@@ -8,6 +8,7 @@ class OriginProb(models.Model):
     number = models.IntegerField(null=True, blank=True)
     category = models.CharField(null=True, blank=True, max_length=255)
     title = models.CharField(max_length=255)
+    remark = models.TextField(null=True, blank=True)
 
 
 class ProblemGroup(models.Model):
