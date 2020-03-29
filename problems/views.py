@@ -173,3 +173,29 @@ class UpdateProblemsToGroup(APIView):
         serializer = ProbGroupSerializer(group)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetProblems(APIView):
+    """
+    get problems
+    """
+    def post(self, request):
+        """
+        request data
+        - group : array of probGroupId. if empty, all problems
+        - category : array of category. if empty, all problems
+        - level : array of level. if empty, all levels
+        - solved : 없거나 true or false
+        """
+        user = request.user
+        problems = user.problems.all()
+        if 'group' in request.data:
+            problems = problems.filter(group__id__in=request.data['group'])
+        if 'category' in request.data:
+            problems = problems.filter(origin__category__in=request.data['category'])
+        if 'level' in request.data:
+            problems = problems.filter(origin__level__in=request.data['level'])
+        if 'solved' in request.data:
+            problems = problems.filter(solved=request.data['solved'])
+        serializer = ProbSerializer(problems, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
