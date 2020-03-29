@@ -15,7 +15,7 @@ from problems.models import OriginProb, Problem
 # from pprint import pprint
 
 
-class GetAllSolutions(APIView):
+class GetProblemsSolutions(APIView):
     """
     get all solutions of origin problem only whose own group's user
     """
@@ -31,7 +31,28 @@ class GetAllSolutions(APIView):
         except OriginProb.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        found_solutions = origin_prob.solutions.filter(creator__id__in=my_group)
+        found_solutions = origin_prob.solutions.filter(solved=True).filter(creator__id__in=my_group)
+        serializer = MiniSolutionSerializer(found_solutions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetProblemsQuestions(APIView):
+    """
+    get all Questions of origin problem only whose own group's user
+    """
+    def get(self, request, originId):
+        user = request.user
+        my_group = set()
+        groups = user.group.all()
+        for group in groups:
+            my_group |= set(group.members.values_list('id', flat=True))
+
+        try:
+            origin_prob = OriginProb.objects.get(id=originId)
+        except OriginProb.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        found_solutions = origin_prob.solutions.filter(solved=False).filter(creator__id__in=my_group)
         serializer = MiniSolutionSerializer(found_solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         

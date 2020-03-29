@@ -554,7 +554,7 @@ class GetSolutionTest(APITestCase):
         test get all solutions
         """
         self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.test_user_1.data['token']))
-        response = self.client.get(reverse('get-all-solutions', kwargs={'originId': self.copy_res.data[0]['id']}))
+        response = self.client.get(reverse('get-problems-solutions', kwargs={'originId': self.copy_res.data[0]['id']}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
