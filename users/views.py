@@ -2,7 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
-from .serializers import UserSerializer, LogInSerializer, GroupSerializer, InitialProfileSerializer
+from .serializers import (
+    UserSerializer,
+    LogInSerializer,
+    MiniGroupSerializer,
+    GroupSerializer,
+    InitialProfileSerializer,
+    CurrentUserSerializer
+)
 from .models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
@@ -58,6 +65,22 @@ class SignIn(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class GetUser(APIView):
+    """
+    Get User
+    """
+    def get(self, request, userId):
+        """
+        request data 안받는다
+        """
+        try:
+            user = User.objects.get(id=userId)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = CurrentUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class ChangePassword(APIView):
     """
     Password Change
@@ -82,6 +105,22 @@ class ChangePassword(APIView):
         
         user.set_password(new_pw)
         return Response(status=status.HTTP_200_OK)
+
+
+class GetGroup(APIView):
+    """
+    get group
+    """
+    def get(self, groupId):
+        """
+        not get request data
+        """
+        try:
+            group = Group.objects.get(id=groupId)
+        except Group.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = GroupSerializer(group)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CreateGroup(APIView):
@@ -165,15 +204,16 @@ class SearchGroup(APIView):
         except Group.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        serializer = GroupSerializer(groups, many=True)
+        serializer = MiniGroupSerializer(groups, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CheckUnique(APIView):
-    permission_classes = [AllowAny]
     """
     Check email unqiue
     """
+    permission_classes = [AllowAny]
+
     def post(self, request):
         """
         request data
@@ -198,22 +238,27 @@ class CheckUnique(APIView):
 
 
 class SendConfirmCode(APIView):
-    permission_classes = [AllowAny]
     """
     Send Confirm code
     """
+    permission_classes = [AllowAny]
     
     def post(self, request):
         """
         request data
         - email
         """
+        if 'email' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        to_mail_addr = request.data['email']
+        if User.objects.filter(email=to_mail_addr).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
         code = ''.join(code)
 
         title = '[MORGORITHM] Confirm email'
         from_mail_addr = settings.DEFAULT_FROM_EMAIL
-        to_mail_addr = request.data['email']
         html_msg = loader.render_to_string('email_template.html', {'code': code})
 
         res = send_mail(

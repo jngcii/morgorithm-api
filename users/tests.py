@@ -310,14 +310,10 @@ class AccountsTest(APITestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_send_confirm_code(self):
-        self.test_create_user()
         data = {
-            'username': 'foobar',
-            'password': 'somepassword',
+            'email': 'eeeee@example.com',
         }
-        user_res = self.client.post(self.sign_in_url, data, format='json')
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
-        response = self.client.get(self.send_confirm_code_url)
+        response = self.client.post(self.send_confirm_code_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['confirm_code']), 8)
         self.assertEqual(User.objects.latest('id').is_confirmed, False)
@@ -336,6 +332,7 @@ class AccountsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
         self.assertEqual(len(response.data['members']), 1)
+        self.assertTrue('members_count' in response.data)
 
     def test_create_group_with_password(self):
         login_data = {

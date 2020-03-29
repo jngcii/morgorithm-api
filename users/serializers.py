@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import User, Group
-from problems.serializers import ProbGroupSerializer, ProbSerializer
-from solutions.serializers import MiniSolutionSerializer
+from problems.models import ProblemGroup
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -34,25 +33,43 @@ class LogInSerializer(serializers.ModelSerializer):
         fields = ('email', 'password')
 
 
+class GroupUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'username', 'name', 'email')
+
+
 class GroupSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         required=True,
         max_length=255,
         validators=[UniqueValidator(queryset=Group.objects.all())]
     )
-    password = serializers.CharField(allow_null=True, max_length=12, default=None, write_only=True)
-    members = UserSerializer(read_only=True, many=True)
+    password = serializers.CharField(allow_null=True, max_length=12, default=None, write_only=True, required=False)
+    members = GroupUserSerializer(read_only=True, many=True, required=False)
 
     class Meta:
         model = Group
-        fields = ('id', 'name', 'password', 'members')
+        fields = ('id', 'name', 'password', 'members', 'members_count',)
+
+
+class MiniGroupSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Group
+        fields = ('id', 'name', 'members_count',)
+
+
+class MiniProbGroupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProblemGroup
+        fields = ('id', 'name', 'problems_count', 'solved_problems_count',)
 
 
 class InitialProfileSerializer(serializers.ModelSerializer):
-    group = GroupSerializer(many=True, read_only=True)
-    problem_groups = ProbGroupSerializer(many=True, read_only=True)
-    problems = ProbSerializer(many=True, read_only=True)
-    solutions = MiniSolutionSerializer(many=True, read_only=True)
+    group = MiniGroupSerializer(many=True, read_only=True)
+    problem_groups = MiniProbGroupSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
@@ -63,8 +80,22 @@ class InitialProfileSerializer(serializers.ModelSerializer):
             'name',
             'group',
             'problem_groups',
-            'problems',
-            'solutions',
+            'problems_count',
+            'solved_problems_count',
+            'questions_count',
+        )
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    group = MiniGroupSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'name',
+            'group',
             'problems_count',
             'solved_problems_count',
             'questions_count',
