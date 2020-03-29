@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Q
 from .serializers import (
     OriginProbSerializer,
     ProbSerializer,
@@ -186,6 +187,7 @@ class GetProblems(APIView):
         - category : array of category. if empty, all problems
         - level : array of level. if empty, all levels
         - solved : 없거나 true or false
+        - keyword : string
         """
         user = request.user
         problems = user.problems.all()
@@ -197,5 +199,13 @@ class GetProblems(APIView):
             problems = problems.filter(origin__level__in=request.data['level'])
         if 'solved' in request.data:
             problems = problems.filter(solved=request.data['solved'])
+        if 'keyword' in request.data:
+            problems = problems.filter(
+                Q(origin__number=int(request.data['keyword']))
+                |Q(origin__number=request.data['keyword'])
+                |Q(origin__title__icontains=request.data['keyword'])
+                |Q(origin_remark__icontains=request.data['keyword'])
+            )
+            
         serializer = ProbSerializer(problems, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
