@@ -85,6 +85,7 @@ class InitialProfileSerializer(serializers.ModelSerializer):
             'questions_count',
         )
 
+
 class CurrentUserSerializer(serializers.ModelSerializer):
     group = MiniGroupSerializer(many=True, read_only=True)
 

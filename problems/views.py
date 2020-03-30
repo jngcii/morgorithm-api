@@ -191,15 +191,15 @@ class GetProblems(APIView):
         """
         user = request.user
         problems = user.problems.all()
-        if 'group' in request.data:
+        if 'group' in request.data and len(request.data['group']):
             problems = problems.filter(group__id__in=request.data['group'])
-        if 'category' in request.data:
+        if 'category' in request.data and len(request.data['category']):
             problems = problems.filter(origin__category__in=request.data['category'])
-        if 'level' in request.data:
+        if 'level' in request.data and len(request.data['level']):
             problems = problems.filter(origin__level__in=request.data['level'])
-        if 'solved' in request.data:
+        if 'solved' in request.data and len(request.data['solved']):
             problems = problems.filter(solved=request.data['solved'])
-        if 'keyword' in request.data:
+        if 'keyword' in request.data and len(request.data['keyword']):
             problems = problems.filter(
                 Q(origin__number=int(request.data['keyword']))
                 |Q(origin__number=request.data['keyword'])
