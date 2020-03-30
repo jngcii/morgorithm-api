@@ -12,6 +12,7 @@ from .serializers import (
 )
 from .models import Solution, Comment, SubComment
 from problems.models import OriginProb, Problem
+from users.models import User
 # from pprint import pprint
 
 
@@ -56,6 +57,21 @@ class GetProblemsQuestions(APIView):
         serializer = MiniSolutionSerializer(found_solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
+
+class GetQuestions(APIView):
+    """
+    get all questions only whose own group's user
+    """
+    def get(self, request, userId):
+        try:
+            user = User.objects.get(id=userId)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+            
+        solutions = user.solutions.filter(solved=False)
+        serializer = MiniSolutionSerializer(solutions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class GetAllQuestions(APIView):
     """
