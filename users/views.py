@@ -111,7 +111,7 @@ class GetGroup(APIView):
     """
     get group
     """
-    def get(self, groupId):
+    def get(self, request, groupId):
         """
         not get request data
         """
@@ -119,7 +119,7 @@ class GetGroup(APIView):
             group = Group.objects.get(id=groupId)
         except Group.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = GroupSerializer(group)
+        serializer = GroupSerializer(group, context={"request":request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -142,7 +142,7 @@ class CreateGroup(APIView):
             if group:
                 group.members.add(user)
                 group.save()
-                new_serializer = GroupSerializer(group)
+                new_serializer = GroupSerializer(group, context={"request":request})
                 return Response(new_serializer.data, status=status.HTTP_201_CREATED)
                 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -168,7 +168,7 @@ class EnterGroup(APIView):
 
         group.members.add(user)
         group.save()
-        serializer = GroupSerializer(group)
+        serializer = GroupSerializer(group, context={"request":request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -204,7 +204,7 @@ class SearchGroup(APIView):
         except Group.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        serializer = MiniGroupSerializer(groups, many=True)
+        serializer = MiniGroupSerializer(groups, many=True, context={"request":request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

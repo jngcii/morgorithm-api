@@ -107,8 +107,8 @@ class SolutionSerializer(serializers.ModelSerializer):
 class SolutionDetailSerializer(serializers.ModelSerializer):
     problem = OriginProbSerializer()
     creator = CreatorSerializer(required=False, read_only=True)
-    likes = CreatorSerializer(required=False, many=True)
-    comments = CommentSerializer(required=False, many=True)
+    # likes = CreatorSerializer(required=False, many=True)
+    # comments = CommentSerializer(required=False, many=True)
 
     class Meta:
         model = Solution

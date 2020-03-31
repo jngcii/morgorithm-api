@@ -35,7 +35,7 @@ class LogInSerializer(serializers.ModelSerializer):
 
 class GroupUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
+        model = User
         fields = ('id', 'username', 'name', 'email')
 
 
@@ -47,17 +47,33 @@ class GroupSerializer(serializers.ModelSerializer):
     )
     password = serializers.CharField(allow_null=True, max_length=12, default=None, write_only=True, required=False)
     members = GroupUserSerializer(read_only=True, many=True, required=False)
+    is_joined = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ('id', 'name', 'password', 'members', 'members_count',)
+        fields = ('id', 'name', 'password', 'members', 'members_count', 'is_private', 'is_joined', )
+
+    def get_is_joined(self, obj):
+        if 'request' in self.context:
+            request = self.context['request']
+            if obj in request.user.group.all():
+                return True;
+        return False
 
 
 class MiniGroupSerializer(serializers.ModelSerializer):
+    is_joined = serializers.SerializerMethodField()
     
     class Meta:
         model = Group
-        fields = ('id', 'name', 'members_count',)
+        fields = ('id', 'name', 'members_count', 'is_private', 'is_joined', )
+
+    def get_is_joined(self, obj):
+        if 'request' in self.context:
+            request = self.context['request']
+            if obj in request.user.group.all():
+                return True;
+        return False
 
 
 class MiniProbGroupSerializer(serializers.ModelSerializer):

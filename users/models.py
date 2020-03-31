@@ -13,6 +13,10 @@ class Group(models.Model):
     def members_count(self):
         return self.members.count()
 
+    @property
+    def is_private(self):
+        return False if self.password == None else True
+
 
 class MyUserManager(BaseUserManager):
     """
