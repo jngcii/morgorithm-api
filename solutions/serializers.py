@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Solution, Comment, SubComment
 from users.models import User
+from problems.serializers import OriginProbSerializer
 
 
 class CreatorSerializer(serializers.ModelSerializer):
@@ -12,6 +13,7 @@ class CreatorSerializer(serializers.ModelSerializer):
 
 
 class MiniSolutionSerializer(serializers.ModelSerializer):
+    problem = OriginProbSerializer()
     creator = CreatorSerializer()
 
     class Meta:
@@ -20,7 +22,9 @@ class MiniSolutionSerializer(serializers.ModelSerializer):
             'id',
             'creator',
             'lang',
+            'caption',
             'solved',
+            'problem',
             'view',
             'comment_count',
             'like_count',
@@ -85,8 +89,6 @@ class SolutionSerializer(serializers.ModelSerializer):
     caption = serializers.CharField(allow_null=True, default=None)
     view = serializers.IntegerField(default=0)
     creator = CreatorSerializer(required=False, read_only=True)
-    likes = CreatorSerializer(required=False, many=True)
-    comments = CommentSerializer(required=False, many=True)
 
     class Meta:
         model = Solution
@@ -99,10 +101,25 @@ class SolutionSerializer(serializers.ModelSerializer):
             'caption',
             'view',
             'solved',
-            'likes',
-            'like_count',
-            'comments',
-            'comment_count',
+        )
+
+
+class SolutionDetailSerializer(serializers.ModelSerializer):
+    problem = OriginProbSerializer()
+    creator = CreatorSerializer(required=False, read_only=True)
+    likes = CreatorSerializer(required=False, many=True)
+    comments = CommentSerializer(required=False, many=True)
+
+    class Meta:
+        model = Solution
+        fields = (
+            'id',
+            'creator',
+            'problem',
+            'code',
+            'lang',
+            'caption',
+            'solved',
         )
 
 

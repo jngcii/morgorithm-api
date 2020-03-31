@@ -9,6 +9,7 @@ from .serializers import (
     SolutionSerializer,
     SolutionUpdateSerializer,
     MiniSolutionSerializer,
+    SolutionDetailSerializer,
 )
 from .models import Solution, Comment, SubComment
 from problems.models import OriginProb, Problem
@@ -23,6 +24,7 @@ class GetProblemsSolutions(APIView):
     def get(self, request, originId):
         user = request.user
         my_group = set()
+        my_group.add(user.id)
         groups = user.group.all()
         for group in groups:
             my_group |= set(group.members.values_list('id', flat=True))
@@ -44,6 +46,7 @@ class GetProblemsQuestions(APIView):
     def get(self, request, originId):
         user = request.user
         my_group = set()
+        my_group.add(user.id)
         groups = user.group.all()
         for group in groups:
             my_group |= set(group.members.values_list('id', flat=True))
@@ -112,7 +115,7 @@ class SearchQuestions(APIView):
 
 class GetSolution(APIView):
     """
-    get Solution
+    get Solution or Question
     """
     def get(self, request, solutionId):
         try:
@@ -120,7 +123,7 @@ class GetSolution(APIView):
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        serializer = SolutionSerializer(found_solution)
+        serializer = SolutionDetailSerializer(found_solution)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -144,12 +147,13 @@ class SolutionAPI(APIView):
             solution = serializer.save(creator=user)
             if solution:
                 if solution.solved:
-                    problem = Problem.objects.get(origin__id=solution.problem.id)
+                    problem = user.problems.get(origin__id=solution.problem.id)
                     if problem and not problem.is_solved:
                         problem.is_solved = True
                         problem.save()
                 
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                new_serializer = SolutionDetailSerializer(solution)
+                return Response(new_serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -174,10 +178,9 @@ class SolutionAPI(APIView):
         if serializer.is_valid():
             solution = serializer.save()
             if solution:
-                new_serializer = SolutionSerializer(solution)
+                new_serializer = SolutionDetailSerializer(solution)
                 return Response(new_serializer.data, status=status.HTTP_200_OK)
         
-        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     
@@ -201,6 +204,23 @@ class CommentAPI(APIView):
     """
     Comment APIs
     """
+    def get(self, request):
+        """
+        ### request data
+        - solution id
+        """
+        if 'solutionId' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            solution = Solution.objects.get(id=request.data['solutionId'])
+            comments = solution.comments.all()
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
     def post(self, request):
         """
         ### request data
