@@ -97,12 +97,12 @@ class User(AbstractBaseUser):
 
     @property
     def problems_count(self):
-        return self.problems.count()
+        return self.problems.all().count()
     
     @property
     def solved_problems_count(self):
-        return self.problems.filter(is_solved=True).count()
+        return self.solutions.filter(solved=True).all().count()
 
     @property
     def questions_count(self):
-        return self.solutions.filter(solved=False).count()
+        return self.solutions.filter(solved=False).all().count()

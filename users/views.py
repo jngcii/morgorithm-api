@@ -69,12 +69,12 @@ class GetUser(APIView):
     """
     Get User
     """
-    def get(self, request, userId):
+    def get(self, request, username):
         """
         request data 안받는다
         """
         try:
-            user = User.objects.get(id=userId)
+            user = User.objects.get(username=username)
         except User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = CurrentUserSerializer(user)

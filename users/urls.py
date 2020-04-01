@@ -8,9 +8,9 @@ urlpatterns = [
     path('change-password/', views.ChangePassword.as_view(), name='change-password'),
     path('send-confirm-code/', views.SendConfirmCode.as_view(), name='send-confirm-code'),
     path('create-group/', views.CreateGroup.as_view(), name='create-group'),
-    path('get-user/<int:userId>/', views.GetUser.as_view(), name='get-user'),
     path('get-group/<int:groupId>/', views.GetGroup.as_view(), name='get-group'),
     path('enter-group/<int:groupId>/', views.EnterGroup.as_view(), name='enter-group'),
     path('leave-group/<int:groupId>/', views.LeaveGroup.as_view(), name='leave-group'),
+    path('get-user/<username>/', views.GetUser.as_view(), name='get-user'),
     path('search-group/<txt>/', views.SearchGroup.as_view(), name='search-group'),
 ]

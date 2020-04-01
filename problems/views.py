@@ -82,7 +82,8 @@ class ProblemGroupAPI(APIView):
     def post(self, request):
         """
         request data
-        - name (group name)
+        - name (groupName)
+        - probIds
         """
         user = request.user
         if user.problem_groups.count() >= 5:
@@ -92,7 +93,16 @@ class ProblemGroupAPI(APIView):
         if serializer.is_valid():
             group = serializer.save(creator=user)
             if group:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                if 'probIds' in request.data:
+                    for pId in request.data['probIds']:
+                        try:
+                            prob = Problem.objects.get(id=pId)
+                            group.problems.add(prob)
+                        except Problem.DoesNotExist:
+                            continue
+                    group.save()
+                    new_serializer = ProbGroupSerializer(group)
+                return Response(new_serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -196,15 +206,14 @@ class GetProblems(APIView):
         if 'category' in request.data and len(request.data['category']):
             problems = problems.filter(origin__category__in=request.data['category'])
         if 'level' in request.data and len(request.data['level']):
-            problems = problems.filter(origin__level__in=request.data['level'])
+            problems = problems.filter(Q(origin__level__in=request.data['level'])|Q(origin__level=None))
         if 'solved' in request.data and len(request.data['solved']):
-            problems = problems.filter(solved=request.data['solved'])
-        if 'keyword' in request.data and len(request.data['keyword']):
+            problems = problems.filter(is_solved__in=request.data['solved'])
+        if 'keyword' in request.data:
             problems = problems.filter(
-                Q(origin__number=int(request.data['keyword']))
-                |Q(origin__number=request.data['keyword'])
+                Q(origin__number=request.data['keyword'] if request.data['keyword'].isdigit() else 0)
                 |Q(origin__title__icontains=request.data['keyword'])
-                |Q(origin_remark__icontains=request.data['keyword'])
+                |Q(origin__remark__icontains=request.data['keyword'])
             )
             
         serializer = ProbSerializer(problems, many=True)
