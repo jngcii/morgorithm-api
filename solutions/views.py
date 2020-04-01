@@ -76,6 +76,22 @@ class GetQuestions(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class GetSolutions(APIView):
+    """
+    get all solutions only whose own group's user
+    """
+    def get(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+            
+        solutions = user.solutions.filter(solved=True)
+        serializer = MiniSolutionSerializer(solutions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 class GetAllQuestions(APIView):
     """
     get all questions only whose own group's user

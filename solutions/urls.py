@@ -13,5 +13,6 @@ urlpatterns = [
     path('like-solution/<int:solutionId>/', views.LikeSolution.as_view(), name='like-solution'),
     path('unlike-solution/<int:solutionId>/', views.UnlikeSolution.as_view(), name='unlike-solution'),
     path('get-questions/<username>/', views.GetQuestions.as_view(), name='get-questions'),
+    path('get-solutions/<username>/', views.GetSolutions.as_view(), name='get-questions'),
     path('search-questions/<txt>/', views.SearchQuestions.as_view(), name='search-questions'),
 ]
