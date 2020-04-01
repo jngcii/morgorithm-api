@@ -218,3 +218,20 @@ class GetProblems(APIView):
             
         serializer = ProbSerializer(problems, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetProblem(APIView):
+    """
+    get single problem py origin problem id
+    """
+    def get(self, request, originId):
+        """
+        param : originId (original problem id)
+        """
+        user = request.user
+        try:
+            problem = user.problems.get(origin__id=originId)
+        except Problem.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProbSerializer(problem)
+        return Response(serializer.data, status=status.HTTP_200_OK)

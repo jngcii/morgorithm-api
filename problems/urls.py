@@ -7,4 +7,5 @@ urlpatterns = [
     path('problem-group-api/', views.ProblemGroupAPI.as_view(), name='problem-group-api'),
     path('update-problems-to-group/', views.UpdateProblemsToGroup.as_view(), name='update-problems-to-group'),
     path('get-problems/', views.GetProblems.as_view(), name='get-problems'),
+    path('get-problem/<int:originId>/', views.GetProblem.as_view(), name='get-problem'),
 ]
