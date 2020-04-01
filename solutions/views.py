@@ -65,9 +65,9 @@ class GetQuestions(APIView):
     """
     get all questions only whose own group's user
     """
-    def get(self, request, userId):
+    def get(self, request, username):
         try:
-            user = User.objects.get(id=userId)
+            user = User.objects.get(username=username)
         except User.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
             
