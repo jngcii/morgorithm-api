@@ -117,3 +117,32 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'solved_problems_count',
             'questions_count',
         )
+
+
+class EditProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=False,
+        max_length=32,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    email = serializers.EmailField(
+        required=False,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    name = serializers.CharField(
+        required=False
+    )
+
+    def update(self, instance, validated_data):
+        if validated_data['username']:
+            instance.username = validated_data.get('username', instance.username)
+        if validated_data['name']:
+            instance.name = validated_data.get('name', instance.name)
+        print(instance, "instance")
+        instance.save()
+        return instance
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'name', 'password', 'group')
+

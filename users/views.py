@@ -8,7 +8,8 @@ from .serializers import (
     MiniGroupSerializer,
     GroupSerializer,
     InitialProfileSerializer,
-    CurrentUserSerializer
+    CurrentUserSerializer,
+    EditProfileSerializer,
 )
 from .models import User, Group
 from rest_framework.authtoken.models import Token
@@ -131,9 +132,13 @@ class CreateGroup(APIView):
         """
         request data
         - name
+        - password
         """
+        if 'name' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         user = request.user
-        if user.group.count() >= 5:
+        if user.group.count() >= 10:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         serializer = GroupSerializer(data=request.data)
@@ -162,9 +167,9 @@ class EnterGroup(APIView):
         
         if group.password:
             if not request.data.get('password', None):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_404_NOT_FOUND)
             if group.password != request.data['password']:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_404_NOT_FOUND)
 
         group.members.add(user)
         group.save()
@@ -285,3 +290,19 @@ class ConfirmEmail(APIView):
         user.save()
         return Response(status=status.HTTP_200_OK)
         
+
+class EditProfile(APIView):
+    """
+    edit profile
+    """
+    def put(self, request):
+        user = request.user
+
+        un = request.data['username']
+        n = request.data['name']
+        
+        user.username = un
+        user.name = n
+        user.save()
+
+        return Response(status=status.HTTP_200_OK)

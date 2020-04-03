@@ -7,6 +7,7 @@ from .serializers import (
     ProbSerializer,
     CopyProbSerializer,
     ProbGroupSerializer,
+    MiniGroupSerializer,
 )
 from .models import OriginProb, Problem, ProblemGroup
 
@@ -235,3 +236,19 @@ class GetProblem(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = ProbSerializer(problem)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetGroupsNotInclude(APIView):
+    """
+    get groups not include problem
+    """
+    def get(self, request, probId):
+        """
+        param : problem id
+        """
+        user = request.user
+        groups = user.problem_groups.all().exclude(problems__id__contains=probId)
+        serializer = MiniGroupSerializer(groups, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        

@@ -33,7 +33,6 @@ class MiniSolutionSerializer(serializers.ModelSerializer):
 
 class SubCommentSerializer(serializers.ModelSerializer):
     creator = CreatorSerializer(required=False)
-    likes = CreatorSerializer(required=False, many=True)
     
     class Meta:
         model = SubComment
@@ -42,8 +41,8 @@ class SubCommentSerializer(serializers.ModelSerializer):
             'comment',
             'creator',
             'message',
-            'likes',
             'like_count',
+            'natural_time',
         )
 
 
@@ -60,7 +59,7 @@ class SubCommentUpdateSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     creator = CreatorSerializer(required=False)
     likes = CreatorSerializer(required=False, many=True)
-    sub_comments = SubCommentSerializer(required=False, many=True)
+    is_liked = serializers.SerializerMethodField()
     
     class Meta:
         model = Comment
@@ -71,8 +70,16 @@ class CommentSerializer(serializers.ModelSerializer):
             'message',
             'likes',
             'like_count',
-            'sub_comments',
+            'natural_time',
+            'is_liked',
         )
+
+    def get_is_liked(self, obj):
+        if 'request' in self.context:
+            request = self.context['request']
+            if obj in request.user.comment_likes.all():
+                return True;
+        return False
 
 
 class CommentUpdateSerializer(serializers.ModelSerializer):
@@ -107,8 +114,6 @@ class SolutionSerializer(serializers.ModelSerializer):
 class SolutionDetailSerializer(serializers.ModelSerializer):
     problem = OriginProbSerializer()
     creator = CreatorSerializer(required=False, read_only=True)
-    # likes = CreatorSerializer(required=False, many=True)
-    # comments = CommentSerializer(required=False, many=True)
 
     class Meta:
         model = Solution
@@ -121,6 +126,27 @@ class SolutionDetailSerializer(serializers.ModelSerializer):
             'caption',
             'solved',
         )
+
+
+class SolutionCountSerializer(serializers.ModelSerializer):
+    is_liked = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Solution
+        fields = (
+            'id',
+            'view',
+            'like_count',
+            'comment_count',
+            'is_liked',
+        )
+
+    def get_is_liked(self, obj):
+        if 'request' in self.context:
+            request = self.context['request']
+            if obj in request.user.solution_likes.all():
+                return True;
+        return False
 
 
 class SolutionUpdateSerializer(serializers.ModelSerializer):
@@ -140,3 +166,23 @@ class SolutionUpdateSerializer(serializers.ModelSerializer):
             'like_count',
             'comment_count',
         )
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    likes = CreatorSerializer(required=False, many=True)
+    is_liked = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'like_count',
+            'likes',
+            'is_liked',
+        )
+
+    def get_is_liked(self, obj):
+        if 'request' in self.context:
+            request = self.context['request']
+            if obj in request.user.comment_likes.all():
+                return True;
+        return False

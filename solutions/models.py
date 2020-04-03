@@ -65,6 +65,9 @@ class Comment(TimeStampedModel):
     def like_count(self):
         return self.likes.count()
 
+    class Meta:
+        ordering = ['-created_at']
+
 class SubComment(TimeStampedModel):
     """
     model of sub comment

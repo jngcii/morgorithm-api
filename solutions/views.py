@@ -10,6 +10,8 @@ from .serializers import (
     SolutionUpdateSerializer,
     MiniSolutionSerializer,
     SolutionDetailSerializer,
+    SolutionCountSerializer,
+    CommentLikeSerializer,
 )
 from .models import Solution, Comment, SubComment
 from problems.models import OriginProb, Problem
@@ -142,6 +144,19 @@ class GetSolution(APIView):
         serializer = SolutionDetailSerializer(found_solution)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class GetSolutionCounts(APIView):
+    """
+    get solution count
+    """
+    def get(self, request, solutionId):
+        try:
+            found_solution = Solution.objects.get(id=solutionId)
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = SolutionCountSerializer(found_solution, context={"request":request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class SolutionAPI(APIView):
     """
@@ -216,26 +231,45 @@ class SolutionAPI(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CommentAPI(APIView):
+class GetComments(APIView):
     """
-    Comment APIs
+    get Comments API
     """
-    def get(self, request):
+    def get(self, request, solutionId):
         """
         ### request data
         - solution id
         """
-        if 'solutionId' not in request.data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         try:
-            solution = Solution.objects.get(id=request.data['solutionId'])
+            solution = Solution.objects.get(id=solutionId)
             comments = solution.comments.all()
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = CommentSerializer(comments, many=True)
+        serializer = CommentSerializer(comments, many=True, context={"request":request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class GetCommentLikes(APIView):
+    """
+    get single comment's like_count
+    """
+    def get(self, request, commentId):
+        """
+        # param : comment's id
+        """
+        try:
+            comment = Comment.objects.get(id=commentId)
+            serializer = CommentLikeSerializer(comment, context={"request":request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Comment.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    
+
+class CommentAPI(APIView):
+    """
+    Comment APIs
+    """
 
     def post(self, request):
         """
@@ -291,6 +325,24 @@ class CommentAPI(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class GetSubComments(APIView):
+    """
+    get Comments API
+    """
+    def get(self, request, commentId):
+        """
+        ### request data
+        - comment id
+        """
+        try:
+            comment = Comment.objects.get(id=commentId)
+            comments = comment.sub_comments.all()
+        except Solution.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = SubCommentSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class SubCommentAPI(APIView):
     """
@@ -304,7 +356,6 @@ class SubCommentAPI(APIView):
         """
         user = request.user
         serializer = SubCommentSerializer(data=request.data)
-
         if serializer.is_valid():
             comment = serializer.save(creator=user)
             if comment:
@@ -315,7 +366,7 @@ class SubCommentAPI(APIView):
     def put(self, request):
         """
         ### request data
-        - comment id
+        - id (subcomment id)
         - message
         """
         if 'id' not in request.data:
@@ -337,7 +388,7 @@ class SubCommentAPI(APIView):
     def delete(self, request):
         """
         ### request data
-        - comment id
+        - id (subcomment id)
         """
         if 'id' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -373,25 +424,31 @@ class LikeSolution(APIView):
             found_solution = Solution.objects.get(id=solutionId)
         except Solution.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        found_solution.likes.add(user)
+        
+        if user in found_solution.likes.all():
+            found_solution.likes.remove(user)
+        else:
+            found_solution.likes.add(user)
         found_solution.save()
 
         return Response(status=status.HTTP_200_OK)
 
 
-class UnlikeSolution(APIView):
+class LikeComment(APIView):
 
-    def get(self, request, solutionId):
+    def get(self, request, commentId):
 
         user = request.user
 
         try:
-            found_solution = Solution.objects.get(id=solutionId)
-        except Solution.DoesNotExist:
+            comment = Comment.objects.get(id=commentId)
+        except Comment.DoesNotExist:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        found_solution.likes.remove(user)
-        found_solution.save()
+        if user in comment.likes.all():
+            comment.likes.remove(user)
+        else:
+            comment.likes.add(user)
+        comment.save()
 
         return Response(status=status.HTTP_200_OK)
