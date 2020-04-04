@@ -165,7 +165,7 @@ class SolutionAPI(APIView):
     def post(self, request):
         """
         ### request data
-        - original problem id
+        - problem (original problem id)
         - code
         - lang (c, cpp, java, python, javascript 중 하나)
         - solved
@@ -185,7 +185,7 @@ class SolutionAPI(APIView):
                 
                 new_serializer = SolutionDetailSerializer(solution)
                 return Response(new_serializer.data, status=status.HTTP_201_CREATED)
-        
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

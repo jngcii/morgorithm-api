@@ -93,7 +93,7 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
 
 
 class SolutionSerializer(serializers.ModelSerializer):
-    caption = serializers.CharField(allow_null=True, default=None)
+    caption = serializers.CharField(allow_null=True, default="", required=False)
     view = serializers.IntegerField(default=0)
     creator = CreatorSerializer(required=False, read_only=True)
 
