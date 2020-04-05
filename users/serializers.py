@@ -14,7 +14,6 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
     password = serializers.CharField(min_length=8, write_only=True)
-    avatar = serializers.ImageField(use_url=True, required=False)
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -22,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'name', 'password', 'group', 'avatar')
+        fields = ('id', 'username', 'email', 'name', 'password', 'group', 'avatar',)
 
 
 class LogInSerializer(serializers.ModelSerializer):
@@ -98,6 +97,7 @@ class InitialProfileSerializer(serializers.ModelSerializer):
             'email',
             'name',
             'avatar',
+            'is_social',
             'group',
             'problem_groups',
             'problems_count',
@@ -118,6 +118,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'email',
             'name',
             'avatar',
+            'is_social',
             'group',
             'problems_count',
             'solved_problems_count',

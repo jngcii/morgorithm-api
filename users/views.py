@@ -17,6 +17,7 @@ from rest_framework.permissions import AllowAny
 from django.template import loader
 from django.core.mail import send_mail
 from django.conf import settings
+from pprint import pprint
 import random
 
 class SignUp(APIView):
@@ -306,3 +307,53 @@ class EditProfile(APIView):
         user.save()
 
         return Response(status=status.HTTP_200_OK)
+
+
+class GoogleAuthView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+
+        credential = request.data['credential']['profileObj']
+
+        try:
+            user = User.objects.get(email=credential['email'])
+            if user.is_social:
+                token, _ = Token.objects.get_or_create(user=user)
+                new_serializer = InitialProfileSerializer(user)
+                new_json = new_serializer.data
+                new_json['token'] = token.key
+                return Response(new_json, status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            
+        except User.DoesNotExist:
+            req = dict()
+            req['email'] = credential['email']
+            username = req['email'].split('@')[0]
+            cnt = 0
+            while True:
+                try:
+                    um = username + '_' + str(cnt) if cnt else username
+                    User.objects.get(username=um)
+                    cnt += 1
+                except User.DoesNotExist:
+                    username = um
+                    break
+            req['username'] = um
+            req['name'] = credential['name']
+            req['password'] = 'asdfqwer'
+            serializer = UserSerializer(data=req)
+            if serializer.is_valid():
+                user = serializer.save()
+                user.is_social = True
+                user.avatar = credential['imageUrl']
+                user.save()
+                if user:
+                    token = Token.objects.create(user=user)
+                    new_serializer = InitialProfileSerializer(user)
+                    new_json = new_serializer.data
+                    new_json['token'] = token.key
+                    return Response(new_json, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
