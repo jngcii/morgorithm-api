@@ -10,6 +10,7 @@ from .serializers import (
     InitialProfileSerializer,
     CurrentUserSerializer,
     EditProfileSerializer,
+    AvatarSerializer,
 )
 from .models import User, Group
 from rest_framework.authtoken.models import Token
@@ -357,3 +358,20 @@ class GoogleAuthView(APIView):
                     return Response(new_json, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UploadAvatar(APIView):
+
+    def put(self, request, format=None):
+
+        serializer = AvatarSerializer(request.user, data=request.data)
+
+        if serializer.is_valid():
+
+            serializer.save()
+
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)

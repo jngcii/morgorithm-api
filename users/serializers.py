@@ -153,3 +153,9 @@ class EditProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'name', 'password', 'group')
 
+
+class AvatarSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('avatar', )
