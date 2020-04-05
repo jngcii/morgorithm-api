@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
     password = serializers.CharField(min_length=8, write_only=True)
+    avatar = serializers.ImageField(use_url=True, required=False)
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -21,16 +22,17 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'name', 'password', 'group')
+        fields = ('id', 'username', 'email', 'name', 'password', 'group', 'avatar')
 
 
 class LogInSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255)
     password = serializers.CharField(min_length=4, write_only=True)
+    avatar = serializers.ImageField(use_url=True, required=False)
     
     class Meta:
         model = User
-        fields = ('email', 'password')
+        fields = ('email', 'password', 'avatar')
 
 
 class GroupUserSerializer(serializers.ModelSerializer):
@@ -84,7 +86,7 @@ class MiniProbGroupSerializer(serializers.ModelSerializer):
 
 
 class InitialProfileSerializer(serializers.ModelSerializer):
-    avatar = serializers.ImageField(use_url=True)
+    avatar = serializers.ImageField(use_url=True, required=False)
     group = MiniGroupSerializer(many=True, read_only=True)
     problem_groups = MiniProbGroupSerializer(many=True, read_only=True)
 
@@ -106,7 +108,7 @@ class InitialProfileSerializer(serializers.ModelSerializer):
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     group = MiniGroupSerializer(many=True, read_only=True)
-    avatar = serializers.ImageField(use_url=True)
+    avatar = serializers.ImageField(use_url=True, required=False)
 
     class Meta:
         model = User
