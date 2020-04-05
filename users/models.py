@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager)
+from config.file_util import user_directory_path
 
 
 class Group(models.Model):
@@ -71,6 +72,7 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=11, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=80, null=True, blank=True)
+    avatar = models.ImageField(upload_to=user_directory_path, blank=True, null=True, max_length=1000)
     group = models.ManyToManyField(Group, blank=True, related_name='members')
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)

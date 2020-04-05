@@ -6,10 +6,11 @@ from problems.serializers import OriginProbSerializer
 
 class CreatorSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
+    avatar = serializers.ImageField(use_url=True, required=False)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'name')
+        fields = ('id', 'username', 'name', 'avatar', )
 
 
 class MiniSolutionSerializer(serializers.ModelSerializer):

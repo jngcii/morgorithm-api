@@ -84,6 +84,7 @@ class MiniProbGroupSerializer(serializers.ModelSerializer):
 
 
 class InitialProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(use_url=True)
     group = MiniGroupSerializer(many=True, read_only=True)
     problem_groups = MiniProbGroupSerializer(many=True, read_only=True)
 
@@ -94,6 +95,7 @@ class InitialProfileSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'name',
+            'avatar',
             'group',
             'problem_groups',
             'problems_count',
@@ -104,6 +106,7 @@ class InitialProfileSerializer(serializers.ModelSerializer):
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     group = MiniGroupSerializer(many=True, read_only=True)
+    avatar = serializers.ImageField(use_url=True)
 
     class Meta:
         model = User
@@ -112,6 +115,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'name',
+            'avatar',
             'group',
             'problems_count',
             'solved_problems_count',
