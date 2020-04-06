@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from django.db.models import Q
 from .serializers import (
     OriginProbSerializer,
@@ -12,15 +13,16 @@ from .serializers import (
 from .models import OriginProb, Problem, ProblemGroup
 
 class AddOriginProb(APIView):
+    permission_classes = [AllowAny]
     """
     Add original problem by administrator
     """
     
     def post(self, request):
-        user = request.user
+        # user = request.user
 
-        if not user.is_admin:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        # if not user.is_admin:
+        #     return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = OriginProbSerializer(data=request.data)
         if serializer.is_valid():

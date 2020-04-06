@@ -273,7 +273,7 @@ class SendConfirmCode(APIView):
             '',
             from_mail_addr,
             [to_mail_addr],
-            fail_silently=False,
+            fail_silently=True,
             html_message=html_msg
         )
 
@@ -375,3 +375,49 @@ class UploadAvatar(APIView):
 
         else:
             return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class SendNewPassword(APIView):
+    """
+    Send Confirm code
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """
+        request data
+        - email
+        """
+        if 'email' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        to_mail_addr = request.data['email']
+        
+        try:
+            user = User.objects.get(email=to_mail_addr)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
+        code = ''.join(code)
+
+        user.set_password(code)
+        user.save()
+
+        title = '[MORGORITHM] initialize password'
+        from_mail_addr = settings.DEFAULT_FROM_EMAIL
+        html_msg = loader.render_to_string('new_password.html', {'code': code})
+
+        res = send_mail(
+            title,
+            '',
+            from_mail_addr,
+            [to_mail_addr],
+            fail_silently=True,
+            html_message=html_msg
+        )
+
+        if res:
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)

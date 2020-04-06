@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('find-password/', views.SendNewPassword.as_view(), name='find-password'),
     path('upload-avatar/', views.UploadAvatar.as_view(), name='upload-avatar'),
     path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
     path('check-unique/', views.CheckUnique.as_view(), name='check-unique'),
