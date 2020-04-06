@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from .serializers import (
     SubCommentSerializer,
     SubCommentUpdateSerializer,
@@ -19,10 +20,38 @@ from users.models import User
 # from pprint import pprint
 
 
+class MyPageNumberPagination(PageNumberPagination):
+   page_size = 15
+
+
 class GetProblemsSolutions(APIView):
+    pagination_class = MyPageNumberPagination
+    serializer_class = MiniSolutionSerializer
     """
     get all solutions of origin problem only whose own group's user
     """
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        else:
+            pass
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset,
+                   self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
     def get(self, request, originId):
         user = request.user
         my_group = set()
@@ -37,14 +66,44 @@ class GetProblemsSolutions(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         found_solutions = origin_prob.solutions.filter(solved=True).filter(creator__id__in=my_group)
-        serializer = MiniSolutionSerializer(found_solutions, many=True)
+
+        page = self.paginate_queryset(found_solutions)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(found_solutions, many=True)   
+        # serializer = MiniSolutionSerializer(found_solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetProblemsQuestions(APIView):
+    pagination_class = MyPageNumberPagination
+    serializer_class = MiniSolutionSerializer
     """
     get all Questions of origin problem only whose own group's user
     """
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        else:
+            pass
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset,
+                   self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
     def get(self, request, originId):
         user = request.user
         my_group = set()
@@ -59,14 +118,44 @@ class GetProblemsQuestions(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         found_solutions = origin_prob.solutions.filter(solved=False).filter(creator__id__in=my_group)
-        serializer = MiniSolutionSerializer(found_solutions, many=True)
+
+        page = self.paginate_queryset(found_solutions)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(found_solutions, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
         
 
 class GetQuestions(APIView):
+    pagination_class = MyPageNumberPagination
+    serializer_class = MiniSolutionSerializer
     """
     get all questions only whose own group's user
     """
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        else:
+            pass
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset,
+                   self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
     def get(self, request, username):
         try:
             user = User.objects.get(username=username)
@@ -74,14 +163,43 @@ class GetQuestions(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
             
         solutions = user.solutions.filter(solved=False)
-        serializer = MiniSolutionSerializer(solutions, many=True)
+
+        page = self.paginate_queryset(solutions)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class GetSolutions(APIView):
+    pagination_class = MyPageNumberPagination
+    serializer_class = MiniSolutionSerializer
     """
     get all solutions only whose own group's user
     """
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        else:
+            pass
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset,
+                   self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
     def get(self, request, username):
         try:
             user = User.objects.get(username=username)
@@ -89,15 +207,45 @@ class GetSolutions(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
             
         solutions = user.solutions.filter(solved=True)
-        serializer = MiniSolutionSerializer(solutions, many=True)
+
+        page = self.paginate_queryset(solutions)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(solutions, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
 class GetAllQuestions(APIView):
+    pagination_class = MyPageNumberPagination
+    serializer_class = MiniSolutionSerializer
     """
     get all questions only whose own group's user
     """
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        else:
+            pass
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset,
+                   self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
     def get(self, request):
         user = request.user
         my_group = set()
@@ -106,14 +254,42 @@ class GetAllQuestions(APIView):
             my_group |= set(group.members.values_list('id', flat=True))
 
         solutions = Solution.objects.filter(solved=False).filter(creator__id__in=my_group)
-        serializer = MiniSolutionSerializer(solutions, many=True)
+        page = self.paginate_queryset(solutions)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SearchQuestions(APIView):
+    pagination_class = MyPageNumberPagination
+    serializer_class = MiniSolutionSerializer
     """
     search questions
     """
+    @property
+    def paginator(self):
+        if not hasattr(self, '_paginator'):
+            if self.pagination_class is None:
+                self._paginator = None
+            else:
+                self._paginator = self.pagination_class()
+        else:
+            pass
+        return self._paginator
+
+    def paginate_queryset(self, queryset):
+        
+        if self.paginator is None:
+            return None
+        return self.paginator.paginate_queryset(queryset,
+                   self.request, view=self)
+
+    def get_paginated_response(self, data):
+        assert self.paginator is not None
+        return self.paginator.get_paginated_response(data)
+
     def get(self, request, txt):
         user = request.user
         my_group = set()
@@ -127,7 +303,11 @@ class SearchQuestions(APIView):
         if txt.isdigit():
             found_solutions = Solution.objects.filter(creator__id__in=my_group).filter(problem__number=int(txt)).filter(solved=False)
             solutions |= set(found_solutions)
-        serializer = MiniSolutionSerializer(solutions, many=True)
+        page = self.paginate_queryset(solutions)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(solutions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
