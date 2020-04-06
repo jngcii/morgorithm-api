@@ -1,19 +1,28 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import OriginProbSerializer, ProbSerializer, CopyProbSerializer
-from .models import OriginProb, Problem
+from rest_framework.permissions import AllowAny
+from django.db.models import Q
+from .serializers import (
+    OriginProbSerializer,
+    ProbSerializer,
+    CopyProbSerializer,
+    ProbGroupSerializer,
+    MiniGroupSerializer,
+)
+from .models import OriginProb, Problem, ProblemGroup
 
 class AddOriginProb(APIView):
+    permission_classes = [AllowAny]
     """
     Add original problem by administrator
     """
     
     def post(self, request):
-        user = request.user
+        # user = request.user
 
-        if not user.is_admin:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        # if not user.is_admin:
+        #     return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = OriginProbSerializer(data=request.data)
         if serializer.is_valid():
@@ -66,3 +75,182 @@ class CopyAndGetProbs(APIView):
 
         serializer = ProbSerializer(all_probs, many=True)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProblemGroupAPI(APIView):
+    """
+    add, modify, delete problem group
+    """
+
+    def post(self, request):
+        """
+        request data
+        - name (groupName)
+        - probIds
+        """
+        user = request.user
+        if user.problem_groups.count() >= 5:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProbGroupSerializer(data=request.data)
+        if serializer.is_valid():
+            group = serializer.save(creator=user)
+            if group:
+                if 'probIds' in request.data:
+                    for pId in request.data['probIds']:
+                        try:
+                            prob = Problem.objects.get(id=pId)
+                            group.problems.add(prob)
+                        except Problem.DoesNotExist:
+                            continue
+                    group.save()
+                    new_serializer = ProbGroupSerializer(group)
+                return Response(new_serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        """
+        request data
+        - id (prob group id)
+        - name (new group name)
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_group = ProblemGroup.objects.get(id=request.data['id'])
+        except ProblemGroup.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProbGroupSerializer(found_group, data=request.data)
+        if serializer.is_valid():
+            group = serializer.save()
+            if group:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        """
+        request data
+        - id (prob group id)
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            found_group = ProblemGroup.objects.get(id=request.data['id'])
+            found_group.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProblemGroup.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateProblemsToGroup(APIView):
+    """
+    add problems in problem group
+    """
+    def post(self, request):
+        """
+        request data
+        - id (problem group id)
+        - adding_problems (list of problems id)
+        - removing_problems (list of problems id)
+        """
+        if 'id' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if 'adding_problems' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if 'removing_problems' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if type(request.data['adding_problems']) is not list or type(request.data['removing_problems']) is not list:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            group = ProblemGroup.objects.get(id=request.data['id'])
+        except ProblemGroup.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        for idx in request.data['adding_problems']:
+            try:
+                problem = Problem.objects.get(id=idx)
+                group.problems.add(problem)
+            except Problem.DoesNotExist:
+                continue
+        
+        for idx in request.data['removing_problems']:
+            try:
+                problem = Problem.objects.get(id=idx)
+                group.problems.remove(problem)
+            except Problem.DoesNotExist:
+                continue
+
+        group.save()
+        serializer = ProbGroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetProblems(APIView):
+    """
+    get problems
+    """
+    def post(self, request):
+        """
+        request data
+        - group : array of probGroupId. if empty, all problems
+        - category : array of category. if empty, all problems
+        - level : array of level. if empty, all levels
+        - solved : 없거나 true or false
+        - keyword : string
+        """
+        user = request.user
+        problems = user.problems.all()
+        if 'group' in request.data and len(request.data['group']):
+            problems = problems.filter(group__id__in=request.data['group'])
+        if 'category' in request.data and len(request.data['category']):
+            problems = problems.filter(origin__category__in=request.data['category'])
+        if 'level' in request.data and len(request.data['level']):
+            problems = problems.filter(Q(origin__level__in=request.data['level'])|Q(origin__level=None))
+        if 'solved' in request.data and len(request.data['solved']):
+            problems = problems.filter(is_solved__in=request.data['solved'])
+        if 'keyword' in request.data:
+            problems = problems.filter(
+                Q(origin__number=request.data['keyword'] if request.data['keyword'].isdigit() else 0)
+                |Q(origin__title__icontains=request.data['keyword'])
+                |Q(origin__remark__icontains=request.data['keyword'])
+            )
+            
+        serializer = ProbSerializer(problems, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetProblem(APIView):
+    """
+    get single problem py origin problem id
+    """
+    def get(self, request, originId):
+        """
+        param : originId (original problem id)
+        """
+        user = request.user
+        try:
+            problem = user.problems.get(origin__id=originId)
+        except Problem.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = ProbSerializer(problem)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GetGroupsNotInclude(APIView):
+    """
+    get groups not include problem
+    """
+    def get(self, request, probId):
+        """
+        param : problem id
+        """
+        user = request.user
+        groups = user.problem_groups.all().exclude(problems__id__contains=probId)
+        serializer = MiniGroupSerializer(groups, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        

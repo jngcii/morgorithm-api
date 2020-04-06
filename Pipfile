@@ -12,6 +12,11 @@ django = "*"
 djangorestframework = "*"
 psycopg2-binary = "*"
 django-environ = "*"
+django-storages = "*"
+boto3 = "*"
+pillow = "*"
+bs4 = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"

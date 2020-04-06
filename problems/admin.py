@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Problem, ProblemGroup, OriginProb
 
-# Register your models here.
+admin.site.register(Problem)
+admin.site.register(ProblemGroup)
+admin.site.register(OriginProb)

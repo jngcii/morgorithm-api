@@ -13,6 +13,7 @@ class AccountsTest(APITestCase):
         self.sign_up_url = reverse('sign-up')
         self.sign_in_url = reverse('sign-in')
         self.change_password_url = reverse('change-password')
+        self.send_confirm_code_url = reverse('send-confirm-code')
         self.create_group_url = reverse('create-group')
 
         # We want to go ahead and originally create a user. 
@@ -308,6 +309,15 @@ class AccountsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
 
+    def test_send_confirm_code(self):
+        data = {
+            'email': 'eeeee@example.com',
+        }
+        response = self.client.post(self.send_confirm_code_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['confirm_code']), 8)
+        self.assertEqual(User.objects.latest('id').is_confirmed, False)
+
     def test_create_group(self):
         login_data = {
             'username': 'testuser',
@@ -322,6 +332,7 @@ class AccountsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
         self.assertEqual(len(response.data['members']), 1)
+        self.assertTrue('members_count' in response.data)
 
     def test_create_group_with_password(self):
         login_data = {
