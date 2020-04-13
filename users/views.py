@@ -348,7 +348,6 @@ class GoogleAuthView(APIView):
             if serializer.is_valid():
                 user = serializer.save()
                 user.is_social = True
-                user.avatar = credential['imageUrl']
                 user.save()
                 if user:
                     token = Token.objects.create(user=user)

@@ -35,9 +35,11 @@ class LogInSerializer(serializers.ModelSerializer):
 
 
 class GroupUserSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(use_url=True, required=False)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'name', 'email')
+        fields = ('id', 'username', 'name', 'email', 'avatar', )
 
 
 class GroupSerializer(serializers.ModelSerializer):
