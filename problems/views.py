@@ -234,7 +234,8 @@ class GetProblems(APIView):
         - solved : 없거나 true or false
         - keyword : string
         """
-        problems = Problem.objects.all()
+        user = request.user
+        problems = Problem.objects.filter(creator=user)
 
         if 'group' in request.data and len(request.data['group']):
             problems = problems.filter(group__id__in=request.data['group'])
