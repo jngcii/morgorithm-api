@@ -48,7 +48,7 @@ class SignIn(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        if 'cred' not in request.data:
+        if 'cred' not in request.data or not request.data['cred'] or not request.data['password']:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         user = None
