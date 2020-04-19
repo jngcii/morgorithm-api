@@ -48,14 +48,23 @@ class SignIn(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        if 'email' not in request.data and 'username' not in request.data:
+        if 'cred' not in request.data or not request.data['cred'] or not request.data['password']:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        if 'username' in request.data:
+
+        user = None
+
+        try:
+            user = User.objects.get(email=request.data['cred'])
+        except User.DoesNotExist:
+            pass
+
+        if not user:
             try:
-                email = User.objects.get(username=request.data['username']).email
-                request.data['email'] = email
+                user = User.objects.get(username=request.data['cred'])
             except User.DoesNotExist:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        request.data['email'] = user.email
         serializer = LogInSerializer(data=request.data)
         if serializer.is_valid():
             user = authenticate(email=request.data['email'], password=request.data['password'])
@@ -65,7 +74,7 @@ class SignIn(APIView):
                 new_json = new_serializer.data
                 new_json['token'] = token.key
                 return Response(new_json, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class GetUser(APIView):
