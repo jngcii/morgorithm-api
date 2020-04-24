@@ -60,7 +60,7 @@ class GroupSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             request = self.context['request']
             if obj in request.user.group.all():
-                return True;
+                return True
         return False
 
 
@@ -75,7 +75,7 @@ class MiniGroupSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             request = self.context['request']
             if obj in request.user.group.all():
-                return True;
+                return True
         return False
 
 
@@ -128,32 +128,32 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         )
 
 
-class EditProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=False,
-        max_length=32,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-    email = serializers.EmailField(
-        required=False,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-    name = serializers.CharField(
-        required=False
-    )
+# class EditProfileSerializer(serializers.ModelSerializer):
+#     username = serializers.CharField(
+#         required=False,
+#         max_length=32,
+#         validators=[UniqueValidator(queryset=User.objects.all())]
+#     )
+#     email = serializers.EmailField(
+#         required=False,
+#         validators=[UniqueValidator(queryset=User.objects.all())]
+#     )
+#     name = serializers.CharField(
+#         required=False
+#     )
 
-    def update(self, instance, validated_data):
-        if validated_data['username']:
-            instance.username = validated_data.get('username', instance.username)
-        if validated_data['name']:
-            instance.name = validated_data.get('name', instance.name)
-        print(instance, "instance")
-        instance.save()
-        return instance
+#     def update(self, instance, validated_data):
+#         if validated_data['username']:
+#             instance.username = validated_data.get('username', instance.username)
+#         if validated_data['name']:
+#             instance.name = validated_data.get('name', instance.name)
+#         print(instance, "instance")
+#         instance.save()
+#         return instance
 
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'name', 'password', 'group')
+#     class Meta:
+#         model = User
+#         fields = ('id', 'username', 'email', 'name', 'password', 'group')
 
 
 class AvatarSerializer(serializers.ModelSerializer):
