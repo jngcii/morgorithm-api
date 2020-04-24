@@ -1,4 +1,4 @@
-# HMC API
+# MORGORITHM API
 
 ## User
 
@@ -7,10 +7,10 @@
 - [x] sign in
 - [x] change password
 - [x] verify email
-- [ ] init password
-- [ ] update user profile (just name... )
-- [ ] get user's info
-- [ ] profile image
+- [x] init password
+- [x] update user profile (just name... )
+- [x] get user's info
+- [x] profile image
 
 ### Group
 - [x] create group
