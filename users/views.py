@@ -9,7 +9,6 @@ from .serializers import (
     GroupSerializer,
     InitialProfileSerializer,
     CurrentUserSerializer,
-    EditProfileSerializer,
     AvatarSerializer,
 )
 from .models import User, Group
@@ -18,7 +17,7 @@ from rest_framework.permissions import AllowAny
 from django.template import loader
 from django.core.mail import send_mail
 from django.conf import settings
-from pprint import pprint
+# from pprint import pprint
 import random
 
 class SignUp(APIView):
@@ -371,7 +370,7 @@ class GoogleAuthView(APIView):
 
 class UploadAvatar(APIView):
 
-    def put(self, request, format=None):
+    def put(self, request):
 
         serializer = AvatarSerializer(request.user, data=request.data)
 
