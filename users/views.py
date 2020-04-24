@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from .serializers import (
-    UserSerializer,
+    SignUpSerializer,
     LogInSerializer,
     MiniGroupSerializer,
     GroupSerializer,
@@ -28,7 +28,7 @@ class SignUp(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
@@ -353,7 +353,7 @@ class GoogleAuthView(APIView):
             req['username'] = um
             req['name'] = credential['name']
             req['password'] = 'asdfqwer'
-            serializer = UserSerializer(data=req)
+            serializer = SignUpSerializer(data=req)
             if serializer.is_valid():
                 user = serializer.save()
                 user.is_social = True

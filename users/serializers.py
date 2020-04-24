@@ -3,7 +3,7 @@ from rest_framework.validators import UniqueValidator
 from .models import User, Group
 from problems.models import ProblemGroup
 
-class UserSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
         max_length=32,
