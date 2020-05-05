@@ -21,7 +21,12 @@ class AccountsTest(APITestCase):
             'email': 'test@example.com',
             'password': 'testpassword'
         }
+        self.user_data = {
+            'cred': self.credential['username'],
+            'password': self.credential['password']
+        }
         self.test_user = User.objects.create_user(**self.credential)
+        self.logged_in_response = self.client.post(self.sign_in_url, self.user_data, format='json')
 
 
     def test_sign_in(self):
@@ -67,97 +72,45 @@ class AccountsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_change_password(self):
-        user_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-
-        login_res = self.client.post(self.sign_in_url, user_data, format='json')
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
-
         data = {
             'old_password': 'testpassword',
             'new_password': 'mypassword'
         }
 
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         change_res = self.client.post(self.change_password_url, data, format='json')
         self.assertEqual(change_res.status_code, status.HTTP_200_OK)
 
     def test_change_password_with_too_short_password(self):
-        user_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-
-        login_res = self.client.post(self.sign_in_url, user_data, format='json')
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
-
         data = {
             'old_password': 'testpassword',
             'new_password': 'pw'
         }
 
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         change_res = self.client.post(self.change_password_url, data, format='json')
         self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_change_password_with_too_long_password(self):
-        user_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-
-        login_res = self.client.post(self.sign_in_url, user_data, format='json')
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
-
         data = {
             'old_password': 'testpassword',
             'new_password': 'password'*20
         }
 
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         change_res = self.client.post(self.change_password_url, data, format='json')
         self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_change_password_with_wrong_password(self):
-        user_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-
-        login_res = self.client.post(self.sign_in_url, user_data, format='json')
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
-
         data = {
             'old_password': 'pw',
             'new_password': 'password'
         }
 
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         change_res = self.client.post(self.change_password_url, data, format='json')
         self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_change_password_with_no_field(self):
-        user_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-
-        login_res = self.client.post(self.sign_in_url, user_data, format='json')
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(login_res.status_code, status.HTTP_200_OK)
-
-        data = {}
-
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(login_res.data['token']))
-        change_res = self.client.post(self.change_password_url, data, format='json')
-        self.assertEqual(change_res.status_code, status.HTTP_400_BAD_REQUEST)
-
+        
     def test_create_user(self):
         """
         Ensure we can create a new user and a valid token is created with it.
@@ -209,8 +162,6 @@ class AccountsTest(APITestCase):
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['password']), 1)
 
-
-
     def test_create_user_with_too_long_username(self):
         data = {
             'username': 'foo'*30,
@@ -246,8 +197,6 @@ class AccountsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(len(response.data['username']), 1)
-
-
 
     def test_create_user_with_preexisting_email(self):
         data = {
@@ -315,15 +264,10 @@ class AccountsTest(APITestCase):
         self.assertEqual(User.objects.latest('id').is_confirmed, False)
 
     def test_create_group(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
         data = {
             'name': 'testgroup',
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
@@ -331,16 +275,11 @@ class AccountsTest(APITestCase):
         self.assertTrue('members_count' in response.data)
 
     def test_create_group_with_password(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
         data = {
             'name': 'testgroup',
             'password': '1234'
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
@@ -349,63 +288,33 @@ class AccountsTest(APITestCase):
 
 
     def test_create_group_with_too_long_password(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
         data = {
             'name': 'testgroup',
             'password': '1234123412341234'
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
 
 
     def test_create_group_with_no_name(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
         data = {
             'name': ''
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
-        # self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_too_long_name(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
         data = {
             'name': 'foo'*100
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
-        # self.assertEqual(len(response.data['name']), 1)
-
-    def test_create_group_with_no_name_field(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
-        data = {}
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
-        response = self.client.post(self.create_group_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Group.objects.count(), 0)
-        # self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_no_token(self):
         data = {
@@ -416,15 +325,10 @@ class AccountsTest(APITestCase):
         self.assertEqual(Group.objects.count(), 0)
 
     def test_enter_group(self):
-        login_data = {
-            'cred': 'testuser',
-            'password': 'testpassword'
-        }
-        user_res = self.client.post(self.sign_in_url, login_data, format='json')
         data = {
             'name': 'testgroup',
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user_res.data['token']))
+        self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(self.logged_in_response.data['token']))
         create_res = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(create_res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Group.objects.count(), 1)
