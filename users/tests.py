@@ -3,7 +3,6 @@ from rest_framework.test import APITestCase, APIClient
 from .models import User, Group
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-# import pprint
 
 class AccountsTest(APITestCase):
     def setUp(self):
@@ -30,7 +29,7 @@ class AccountsTest(APITestCase):
         test sign in
         """
         data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
 
@@ -38,12 +37,9 @@ class AccountsTest(APITestCase):
         user = User.objects.latest('id')
         token = Token.objects.get(user=user)
         self.assertEqual(response.data['token'], token.key)
-
-        # pprint.pprint(response.data)
-
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['username'], data['username'])
+        self.assertEqual(response.data['username'], data['cred'])
         self.assertFalse('password' in response.data)
 
     def test_sign_in_with_wrong_username(self):
@@ -51,28 +47,28 @@ class AccountsTest(APITestCase):
         test sign in end point with wrong username
         """
         data = {
-            'username': 'wtf',
+            'cred': 'wtf',
             'password': 'testpassword'
         }
 
         response = self.client.post(self.sign_in_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
     
     def test_sign_in_with_wrong_password(self):
         """
         test sign in end point with wrong username
         """
         data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': '1223asdf'
         }
 
         response = self.client.post(self.sign_in_url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_change_password(self):
         user_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
 
@@ -91,7 +87,7 @@ class AccountsTest(APITestCase):
 
     def test_change_password_with_too_short_password(self):
         user_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
 
@@ -110,7 +106,7 @@ class AccountsTest(APITestCase):
 
     def test_change_password_with_too_long_password(self):
         user_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
 
@@ -129,7 +125,7 @@ class AccountsTest(APITestCase):
 
     def test_change_password_with_wrong_password(self):
         user_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
 
@@ -148,7 +144,7 @@ class AccountsTest(APITestCase):
 
     def test_change_password_with_no_field(self):
         user_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
 
@@ -291,7 +287,7 @@ class AccountsTest(APITestCase):
 
     def test_create_user_with_no_email_field(self):
         data = {
-            'username' : 'foobar',
+            'cred' : 'foobar',
             'password': 'foobarbaz'
         }
 
@@ -320,7 +316,7 @@ class AccountsTest(APITestCase):
 
     def test_create_group(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -336,7 +332,7 @@ class AccountsTest(APITestCase):
 
     def test_create_group_with_password(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -354,7 +350,7 @@ class AccountsTest(APITestCase):
 
     def test_create_group_with_too_long_password(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -370,7 +366,7 @@ class AccountsTest(APITestCase):
 
     def test_create_group_with_no_name(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -381,11 +377,11 @@ class AccountsTest(APITestCase):
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
-        self.assertEqual(len(response.data['name']), 1)
+        # self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_too_long_name(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -396,11 +392,11 @@ class AccountsTest(APITestCase):
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
-        self.assertEqual(len(response.data['name']), 1)
+        # self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_no_name_field(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -409,7 +405,7 @@ class AccountsTest(APITestCase):
         response = self.client.post(self.create_group_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Group.objects.count(), 0)
-        self.assertEqual(len(response.data['name']), 1)
+        # self.assertEqual(len(response.data['name']), 1)
 
     def test_create_group_with_no_token(self):
         data = {
@@ -421,7 +417,7 @@ class AccountsTest(APITestCase):
 
     def test_enter_group(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -448,7 +444,7 @@ class AccountsTest(APITestCase):
 
     def test_enter_group_with_password(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -479,7 +475,7 @@ class AccountsTest(APITestCase):
 
     def test_enter_group_with_wrong_password(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -504,11 +500,11 @@ class AccountsTest(APITestCase):
         }
         self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
         enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': create_res.data['id']}), data2, format='json')
-        self.assertEqual(enter_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(enter_res.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_enter_group_with_empty_password(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -530,11 +526,11 @@ class AccountsTest(APITestCase):
         user2_res = self.client.post(self.sign_up_url, regis_data, format='json')
         self.client.credentials(HTTP_AUTHORIZATION='Token {}'.format(user2_res.data['token']))
         enter_res = self.client.post(reverse('enter-group', kwargs={'groupId': create_res.data['id']}), format='json')
-        self.assertEqual(enter_res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(enter_res.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_enter_non_existing_group(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -559,7 +555,7 @@ class AccountsTest(APITestCase):
 
     def test_leave_group(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -578,7 +574,7 @@ class AccountsTest(APITestCase):
 
     def test_leave_non_existing_group(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -597,7 +593,7 @@ class AccountsTest(APITestCase):
 
     def test_search_group(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
@@ -616,7 +612,7 @@ class AccountsTest(APITestCase):
         
     def test_search_group_2(self):
         login_data = {
-            'username': 'testuser',
+            'cred': 'testuser',
             'password': 'testpassword'
         }
         user_res = self.client.post(self.sign_in_url, login_data, format='json')
