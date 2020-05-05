@@ -85,12 +85,14 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-    def has_perm(self, perm, obj=None):
+    # def has_perm(self, perm, obj=None):
+    def has_perm(self):
         "Does the user have a specific permission?"
         # Simplest possible answer: Yes, always
         return True
 
-    def has_module_perms(self, app_label):
+    # def has_module_perms(self, app_label):
+    def has_module_perms(self):
         "Does the user have permissions to view the app `app_label`?"
         # Simplest possible answer: Yes, always
         return True
