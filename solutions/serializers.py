@@ -126,6 +126,7 @@ class SolutionDetailSerializer(serializers.ModelSerializer):
             'lang',
             'caption',
             'solved',
+            'view',
         )
 
 

@@ -16,6 +16,7 @@ from .serializers import (
 )
 from .models import Solution, Comment, SubComment
 from problems.models import OriginProb, Problem
+from notifications.models import Notification
 from users.models import User
 # from pprint import pprint
 
@@ -461,8 +462,11 @@ class CommentAPI(APIView):
         serializer = CommentSerializer(data=request.data)
 
         if serializer.is_valid():
+
             comment = serializer.save(creator=user)
             if comment:
+                solution = serializer.validated_data['solution']
+                Notification.objects.create(by=user, notification_type='comment', solution=solution, comment=comment)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
