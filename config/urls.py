@@ -18,9 +18,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/users/', include('users.urls')),
-    path('api/probs/', include('problems.urls')),
-    path('api/sols/', include('solutions.urls')),
+    path('api/v1/users/', include('users.urls')),
+    path('api/v1/probs/', include('problems.urls')),
+    path('api/v1/sols/', include('solutions.urls')),
 ]
 
 #urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
