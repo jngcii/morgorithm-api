@@ -16,13 +16,6 @@ class OriginProbSerializer(serializers.ModelSerializer):
         fields = ('id', 'level', 'url', 'number', 'category', 'title', 'remark',)
 
 
-class MiniGroupSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProblemGroup
-        fields = ('id', 'name', )
-
-
 class ProbSerializer(serializers.ModelSerializer):
     origin = OriginProbSerializer()
     is_solved = serializers.BooleanField(default=False)
