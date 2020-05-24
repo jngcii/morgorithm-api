@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'users'
+
 urlpatterns = [
     path('find-password/', views.SendNewPassword.as_view(), name='find-password'),
     path('upload-avatar/', views.UploadAvatar.as_view(), name='upload-avatar'),
