@@ -4,10 +4,11 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
+from datetime import datetime
 from .serializers import (
     OriginProbSerializer,
     ProbSerializer,
-    CopyProbSerializer,
+    InitSerializer,
     ProbGroupSerializer,
 )
 from .models import OriginProb, Problem, ProblemGroup
@@ -252,42 +253,29 @@ class Init(APIView):
     """
     copy all original problems to current user's problem
     """
-
-    def get_user_probs(self, user):
-        try:
-            probs = Problem.objects.filter(creator=user)
-            return probs
-        except Problem.DoesNotExist:
-            return None
     
     def get(self, request):
         user = request.user
-        try:
-            origin_probs = OriginProb.objects.all()
-        except OriginProb.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        last_update = user.last_update
+        origin_probs = OriginProb.objects.filter(created_at__gte=last_update).exclude(id__in=user.problems.values('origin').values_list('id', flat=True))
 
-        probs = self.get_user_probs(user)
-        if probs is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not origin_probs:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         for origin in origin_probs:
-            flag = False
-            for prob in probs:
-                if prob.origin == origin:
-                    flag = True
-            if flag:
-                continue
             
-            copy_serializer = CopyProbSerializer(data={'origin': origin.id})
+            copy_serializer = InitSerializer(data={'origin': origin.id})
             if copy_serializer.is_valid():
                 copy_serializer.save(creator=user)
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         
-        all_probs = self.get_user_probs(user)
+        all_probs = user.problems.all()
         if all_probs is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user.last_update = datetime.now()
+        user.save()
 
         serializer = ProbSerializer(all_probs, many=True)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
