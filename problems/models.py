@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 from users.models import User
 
 # Create your models here.
@@ -16,6 +17,7 @@ class OriginProb(models.Model):
     category = models.CharField(null=True, blank=True, choices=TYPE_CHOICES, max_length=255)
     title = models.CharField(max_length=255)
     remark = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return '{} - {} - {} - {}'.format(self.category, self.number, self.title, self.level)
