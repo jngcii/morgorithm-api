@@ -74,6 +74,7 @@ class User(AbstractBaseUser):
     name = models.CharField(max_length=80, null=True, blank=True)
     avatar = models.ImageField(upload_to=user_directory_path, blank=True, null=True, max_length=1000)
     group = models.ManyToManyField(Group, blank=True, related_name='members')
+    last_update = models.DateTimeField(null=True, blank=True)
     is_social = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
