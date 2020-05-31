@@ -43,10 +43,3 @@ class ProbGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProblemGroup
         fields = ('id', 'name', 'problems', 'problems_count', 'solved_problems_count',)
-
-
-class InitSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Problem
-        fields = ('origin', )
