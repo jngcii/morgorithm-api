@@ -4,11 +4,10 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
-from datetime import datetime
+from django.utils import timezone
 from .serializers import (
     OriginProbSerializer,
     ProbSerializer,
-    InitSerializer,
     ProbGroupSerializer,
 )
 from .models import OriginProb, Problem, ProblemGroup
@@ -229,7 +228,7 @@ class GetIsIncluding(APIView):
             return Response({ 'is_exist': False }, status=status.HTTP_200_OK)
 
 
-class FetchProb(APIView):
+class Fetch(APIView):
     permission_classes = [AllowAny]
     """
     Add original problem by administrator
@@ -257,25 +256,18 @@ class Init(APIView):
     def get(self, request):
         user = request.user
         last_update = user.last_update
-        origin_probs = OriginProb.objects.filter(created_at__gte=last_update).exclude(id__in=user.problems.values('origin').values_list('id', flat=True))
 
-        if not origin_probs:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        if last_update:
+            origin_probs = OriginProb.objects.filter(created_at__gte=last_update).exclude(id__in=user.problems.values('origin').values_list('id', flat=True))
+        else:
+            origin_probs = OriginProb.objects.all()
 
         for origin in origin_probs:
-            
-            copy_serializer = InitSerializer(data={'origin': origin.id})
-            if copy_serializer.is_valid():
-                copy_serializer.save(creator=user)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            Problem.objects.create(creator=user, origin=origin)
         
-        all_probs = user.problems.all()
-        if all_probs is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        user.last_update = datetime.now()
+        user.last_update = timezone.localtime()
         user.save()
 
+        all_probs = user.problems.all()
         serializer = ProbSerializer(all_probs, many=True)
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
