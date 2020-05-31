@@ -7,7 +7,7 @@ urlpatterns = [
     # problem
     path('', views.GetProblemList.as_view(), name='get_problem_list'),
     path('<int:origin_id>/', views.GetSingleProblem.as_view(), name='get_single_problem'),
-    path('fetch/', views.FetchProb.as_view(), name='fetch'),
+    path('fetch/', views.Fetch.as_view(), name='fetch'),
     path('init/', views.Init.as_view(), name='init'),
 
     # problem group
