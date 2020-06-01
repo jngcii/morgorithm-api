@@ -74,7 +74,17 @@ class ProblemTest(APITestCase):
         self.client.get(self.init_url)
         response = self.client.post(self.get_problem_list_url, {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 10)
+        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(response.data['results'][0]['origin']['number'], 1)
+        self.assertTrue('origin' in response.data['results'][0])
+        self.assertTrue('is_solved' in response.data['results'][0])
+
+    def test_get_problem_list_2(self):
+        self.client.get(self.init_url)
+        response = self.client.post('/api/v1/probs/?limit=5&offset=5', {}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(response.data['results'][0]['origin']['number'], 6)
         self.assertTrue('origin' in response.data['results'][0])
         self.assertTrue('is_solved' in response.data['results'][0])
 
