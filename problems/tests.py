@@ -1,6 +1,6 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
-from .models import OriginProb, Problem, ProblemGroup
+from .models import OriginProb, Problem
 from users.models import User
 from rest_framework import status
 # from pprint import pprint
@@ -12,6 +12,7 @@ class ProblemTest(APITestCase):
         self.get_problem_list_url = reverse('problems:get_problem_list')
         self.fetch_url = reverse('problems:fetch')
         self.init_url = reverse('problems:init')
+        self.problem_group_api_url = reverse('problems:problem_group_api')
 
         self.super_credential = {
             'username': 'root',
@@ -94,3 +95,53 @@ class ProblemTest(APITestCase):
         response = self.client.get(reverse('problems:get_single_problem', kwargs={'origin_id': origin.id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['origin']['id'], origin.id)
+
+    def test_create_problem_group(self):
+        self.client.get(self.init_url)
+        problems = Problem.objects.all().values_list('id', flat=True)
+        data = {
+            'name': 'test_problem_group',
+            'problems': problems,
+        }
+        response = self.client.post(self.problem_group_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['problems_count'], 10)
+
+    def test_update_problem_group(self):
+        # init (모든 문제 인스턴스화)
+        self.client.get(self.init_url)
+        # 문제가 없는 그룹 만들기
+        response1 = self.client.post(self.problem_group_api_url, { 'name': 'test_problem_group' }, format='json')
+        self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response1.data['problems_count'], 0)
+        # 그룹에 문제 모두(10개) 넣기
+        group_id = response1.data['id']
+        adding_problems = Problem.objects.all().values_list('id', flat=True)
+        data = {
+            'adding_problems': adding_problems,
+            'removing_problems': [],
+        }
+        response2 = self.client.post(reverse('problems:single_problem_group_api', kwargs={'group_id': group_id}), data, format='json')
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.data['problems_count'], 10)
+        # 그룹에서 문제 5개 빼기
+        removing_problems = adding_problems[:5]
+        data = {
+            'adding_problems': [],
+            'removing_problems': removing_problems,
+        }
+        response3 = self.client.post(reverse('problems:single_problem_group_api', kwargs={'group_id': group_id}), data, format='json')
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
+        self.assertEqual(response3.data['problems_count'], 5)
+
+    def test_modify_problem_group(self):
+        group_id = self.client.post(self.problem_group_api_url, { 'name': 'test_problem_group' }, format='json').data['id']
+        data = { 'name': 'new_problem_group' }
+        response = self.client.put(reverse('problems:single_problem_group_api', kwargs={'group_id': group_id}), data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], data['name'])
+
+    def test_delete_problem_group(self):
+        group_id = self.client.post(self.problem_group_api_url, { 'name': 'test_problem_group' }, format='json').data['id']
+        response = self.client.delete(reverse('problems:single_problem_group_api', kwargs={'group_id': group_id}))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
