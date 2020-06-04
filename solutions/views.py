@@ -136,6 +136,22 @@ class SolutionDetailAPI(APIView):
         found_solution.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class LikeSolution(APIView):
+
+    def get(self, request, solution_id):
+        user = request.user
+        found_solution = get_solution(solution_id)
+        if not found_solution:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if user in found_solution.likes.all():
+            found_solution.likes.remove(user)
+            return Response({'like': False}, status=status.HTTP_200_OK)
+        else:
+            found_solution.likes.add(user)
+            return Response({'like': True}, status=status.HTTP_200_OK)
         
 
 class CommentAPI(APIView):
