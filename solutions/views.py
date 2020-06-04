@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import SolutionSerializer, CommentSerializer
-from .models import Solution
+from .models import Solution, Comment
 from problems.models import OriginProb
 # from notifications.models import Notification
 from users.models import User, Group
@@ -13,6 +13,13 @@ def get_solution(solution_id):
         found_solution = Solution.objects.get(id=solution_id)
         return found_solution
     except Solution.DoesNotExist:
+        return None
+
+def get_comment(comment_id):
+    try:
+        found_comment = Comment.objects.get(id=comment_id)
+        return found_comment
+    except Comment.DoesNotExist:
         return None
 
 
@@ -148,10 +155,10 @@ class LikeSolution(APIView):
 
         if user in found_solution.likes.all():
             found_solution.likes.remove(user)
-            return Response({'like': False}, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             found_solution.likes.add(user)
-            return Response({'like': True}, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_201_CREATED)
         
 
 class CommentAPI(APIView):
@@ -186,43 +193,50 @@ class CommentAPI(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def put(self, request):
-    #     """
-    #     ### request data
-    #     - comment id
-    #     - message
-    #     """
-    #     if 'id' not in request.data:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
-    #     try:
-    #         found_comment = Comment.objects.get(id=request.data['id'])
-    #     except Comment.DoesNotExist:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    #     serializer = CommentUpdateSerializer(found_comment, data=request.data)
+class CommentDetailAPI(APIView):
+    """
+    put: modify comment
+    delete: delete comment
+    """
+    def put(self, request, comment_id):
+        """
+        request data
+        - message
+        """
+        found_comment = get_comment(comment_id)
+        if not found_comment:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = CommentSerializer(found_comment, data=request.data)
+        if serializer.is_valid():
+            comment = serializer.save()
+            if comment:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    #     if serializer.is_valid():
-    #         comment = serializer.save()
-    #         if comment:
-    #             return Response(serializer.data, status=status.HTTP_200_OK)
-        
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    # def delete(self, request):
-    #     """
-    #     ### request data
-    #     - comment id
-    #     """
-    #     if 'id' not in request.data:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
-    #     try:
-    #         found_comment = Comment.objects.get(id=request.data['id'])
-    #         found_comment.delete()
-    #     except Comment.DoesNotExist:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+    def delete(self, request, _, comment_id):
+        found_comment = get_solution(comment_id)
+        if not found_comment:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        found_comment.delete()
 
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class LikeComment(APIView):
+
+    def get(self, request, comment_id):
+        user = request.user
+        found_comment = get_comment(comment_id)
+        if not found_comment:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if user in found_comment.likes.all():
+            found_comment.likes.remove(user)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            found_comment.likes.add(user)
+            return Response(status=status.HTTP_201_CREATED)
 
 # class GetQuestions(APIView):
 #     pagination_class = MyPageNumberPagination
@@ -266,119 +280,3 @@ class CommentAPI(APIView):
 #         else:
 #             serializer = self.serializer_class(solutions, many=True)
 #         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class GetSubComments(APIView):
-#     """
-#     get Comments API
-#     """
-#     def get(self, request, commentId):
-#         """
-#         ### request data
-#         - comment id
-#         """
-#         try:
-#             comment = Comment.objects.get(id=commentId)
-#             comments = comment.sub_comments.all()
-#         except Solution.DoesNotExist:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-#         serializer = SubCommentSerializer(comments, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class SubCommentAPI(APIView):
-#     """
-#     Comment APIs
-#     """
-#     def post(self, request):
-#         """
-#         ### request data
-#         - comment id
-#         - message
-#         """
-#         user = request.user
-#         serializer = SubCommentSerializer(data=request.data)
-#         if serializer.is_valid():
-#             comment = serializer.save(creator=user)
-#             if comment:
-#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     def put(self, request):
-#         """
-#         ### request data
-#         - id (subcomment id)
-#         - message
-#         """
-#         if 'id' not in request.data:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-#         try:
-#             found_comment = SubComment.objects.get(id=request.data['id'])
-#         except Comment.DoesNotExist:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-#         serializer = SubCommentUpdateSerializer(found_comment, data=request.data)
-
-#         if serializer.is_valid():
-#             comment = serializer.save()
-#             if comment:
-#                 return Response(serializer.data, status=status.HTTP_200_OK)
-        
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     def delete(self, request):
-#         """
-#         ### request data
-#         - id (subcomment id)
-#         """
-#         if 'id' not in request.data:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-#         try:
-#             found_comment = SubComment.objects.get(id=request.data['id'])
-#             found_comment.delete()
-#         except Comment.DoesNotExist:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class LikeSolution(APIView):
-
-#     def get(self, request, solutionId):
-
-#         user = request.user
-
-#         try:
-#             found_solution = Solution.objects.get(id=solutionId)
-#         except Solution.DoesNotExist:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-#         if user in found_solution.likes.all():
-#             found_solution.likes.remove(user)
-#         else:
-#             found_solution.likes.add(user)
-#         found_solution.save()
-
-#         return Response(status=status.HTTP_200_OK)
-
-
-# class LikeComment(APIView):
-
-#     def get(self, request, commentId):
-
-#         user = request.user
-
-#         try:
-#             comment = Comment.objects.get(id=commentId)
-#         except Comment.DoesNotExist:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-#         if user in comment.likes.all():
-#             comment.likes.remove(user)
-#         else:
-#             comment.likes.add(user)
-#         comment.save()
-
-#         return Response(status=status.HTTP_200_OK)
