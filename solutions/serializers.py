@@ -79,7 +79,7 @@ class CommentSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             request = self.context['request']
             if obj in request.user.comment_likes.all():
-                return True;
+                return True
         return False
 
 
@@ -94,39 +94,19 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
 
 
 class SolutionSerializer(serializers.ModelSerializer):
-    caption = serializers.CharField(allow_null=True, default="", required=False)
-    view = serializers.IntegerField(default=0)
-    creator = CreatorSerializer(required=False, read_only=True)
+    code = serializers.CharField(required=False)
+    lang = serializers.CharField(required=False)
+    caption = serializers.CharField(required=False, allow_null=True)
+    solved = serializers.BooleanField(required=False)
 
     class Meta:
         model = Solution
         fields = (
             'id',
-            'creator',
-            'problem',
-            'code',
-            'lang',
-            'caption',
-            'view',
-            'solved',
-        )
-
-
-class SolutionDetailSerializer(serializers.ModelSerializer):
-    problem = OriginProbSerializer()
-    creator = CreatorSerializer(required=False, read_only=True)
-
-    class Meta:
-        model = Solution
-        fields = (
-            'id',
-            'creator',
-            'problem',
             'code',
             'lang',
             'caption',
             'solved',
-            'view',
         )
 
 
@@ -147,27 +127,9 @@ class SolutionCountSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             request = self.context['request']
             if obj in request.user.solution_likes.all():
-                return True;
+                return True
         return False
 
-
-class SolutionUpdateSerializer(serializers.ModelSerializer):
-    code = serializers.CharField(required=False)
-    lang = serializers.CharField(required=False)
-    caption = serializers.CharField(required=False, allow_null=True)
-    solved = serializers.BooleanField(required=False)
-
-    class Meta:
-        model = Solution
-        fields = (
-            'id',
-            'code',
-            'lang',
-            'caption',
-            'solved',
-            'like_count',
-            'comment_count',
-        )
 
 class CommentLikeSerializer(serializers.ModelSerializer):
     likes = CreatorSerializer(required=False, many=True)
@@ -186,5 +148,5 @@ class CommentLikeSerializer(serializers.ModelSerializer):
         if 'request' in self.context:
             request = self.context['request']
             if obj in request.user.comment_likes.all():
-                return True;
+                return True
         return False

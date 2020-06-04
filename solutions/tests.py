@@ -2,14 +2,15 @@ from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from problems.models import OriginProb
 from users.models import User, Group
-# from rest_framework import status
+from rest_framework import status
 # from pprint import pprint
 
 class SolutionTest(APITestCase):
     def setUp(self):
         self.client = APIClient()
 
-        self.solutions_api_url = reverse('solutions:solution_api')
+        self.init_url = reverse('problems:init')
+        self.solution_api_url = reverse('solutions:solution_api')
 
         self.credential = {
             'username': 'testuser',
@@ -43,4 +44,16 @@ class SolutionTest(APITestCase):
             OriginProb.objects.create(**data)
     
     def test_get_group_members(self):
-        self.client.get(self.solutions_api_url)
+        self.client.get(self.solution_api_url)
+
+    def test_post_solved_solution(self):
+        self.client.get(self.init_url)
+        data = {
+            'problem': 1,
+            'code': 'def go(a, b): return a + b',
+            'lang': 'python',
+            'solved': True,
+        }
+        response = self.client.post(self.solution_api_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['solved'], data['solved'])

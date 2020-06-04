@@ -46,6 +46,9 @@ class Solution(TimeStampedModel):
     @property
     def like_count(self):
         return self.likes.all().count()
+
+    class Meta:
+        ordering = ['-created_at']
     
 
 class Comment(TimeStampedModel):

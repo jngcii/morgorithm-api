@@ -71,16 +71,75 @@ class SolutionAPI(APIView):
         serializer = SolutionSerializer(solutions)
             
         return Response(serializer.data, status=status.HTTP_200_OK)
-            
 
     def post(self, request):
-        pass
+        """
+        request data
+        - problem (original problem id)
+        - code
+        - lang (c, cpp, java, python, javascript 중 하나)
+        - solved
+        - caption( solved가 True일 때만 받는다.)
+        """
+        if not request.data.get('problem', None):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            problem = OriginProb.objects.get(id=request.data['problem'])
+        except OriginProb.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request):
-        pass
+        user = request.user
+        serializer = SolutionSerializer(data=request.data)
+        if serializer.is_valid():
+            solution = serializer.save(creator=user, problem=problem)
+            if solution:
+                if solution.solved:
+                    user_problem = user.problems.get(origin__id=solution.problem.id)
+                    if user_problem and not user_problem.is_solved:
+                        user_problem.is_solved = True
+                        user_problem.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request):
-        pass
+    # def put(self, request):
+    #     """
+    #     ### request data
+    #     - solution id
+    #     - code
+    #     - lang
+    #     - solved
+    #     - caption
+    #     """
+    #     if 'id' not in request.data:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+    #     try:
+    #         found_solution = Solution.objects.get(id=request.data['id'], creator=request.user)
+    #     except Solution.DoesNotExist:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    #     serializer = SolutionSerializer(found_solution, data=request.data)
+    #     if serializer.is_valid():
+    #         solution = serializer.save()
+    #         if solution:
+    #             return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    
+    # def delete(self, request):
+    #     """
+    #     ### request data
+    #     - solution id
+    #     """
+    #     if 'id' not in request.data:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+    #     try:
+    #         solution = Solution.objects.get(id=request.data['id'], creator=request.user)
+    #         solution.delete()
+    #     except Solution.DoesNotExist:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # class GetProblemsSolutions(APIView):
@@ -405,47 +464,6 @@ class SolutionAPI(APIView):
 # #         print(serializer.errors)
 # #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# #     def put(self, request):
-# #         """
-# #         ### request data
-# #         - solution id
-# #         - code
-# #         - lang
-# #         - solved
-# #         - caption
-# #         """
-# #         if 'id' not in request.data:
-# #             return Response(status=status.HTTP_400_BAD_REQUEST)
-# #         try:
-# #             found_solution = Solution.objects.get(id=request.data['id'], creator=request.user)
-# #         except Solution.DoesNotExist:
-# #             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-# #         serializer = SolutionUpdateSerializer(found_solution, data=request.data)
-# #         if serializer.is_valid():
-# #             solution = serializer.save()
-# #             if solution:
-# #                 new_serializer = SolutionDetailSerializer(solution)
-# #                 return Response(new_serializer.data, status=status.HTTP_200_OK)
-        
-# #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    
-# #     def delete(self, request):
-# #         """
-# #         ### request data
-# #         - solution id
-# #         """
-# #         if 'id' not in request.data:
-# #             return Response(status=status.HTTP_400_BAD_REQUEST)
-# #         try:
-# #             solution = Solution.objects.get(id=request.data['id'], creator=request.user)
-# #             solution.delete()
-# #         except Solution.DoesNotExist:
-# #             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-# #         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # class GetComments(APIView):
