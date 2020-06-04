@@ -40,11 +40,11 @@ class Solution(TimeStampedModel):
         return naturaltime(self.created_at)
 
     @property
-    def comment_count(self):
+    def comments_count(self):
         return self.comments.all().count()
 
     @property
-    def like_count(self):
+    def likes_count(self):
         return self.likes.all().count()
 
     class Meta:
@@ -65,7 +65,7 @@ class Comment(TimeStampedModel):
         return naturaltime(self.created_at)
 
     @property
-    def like_count(self):
+    def likes_count(self):
         return self.likes.count()
 
     class Meta:
@@ -85,5 +85,5 @@ class SubComment(TimeStampedModel):
         return naturaltime(self.created_at)
 
     @property
-    def like_count(self):
+    def likes_count(self):
         return self.likes.count()
