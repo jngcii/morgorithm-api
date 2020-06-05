@@ -31,7 +31,7 @@ class ProblemGroup(models.Model):
         return self.problems.count()
 
     @property
-    def solved_problems_count(self):
+    def solutions_count(self):
         return self.problems.filter(is_solved=True).count()
 
 

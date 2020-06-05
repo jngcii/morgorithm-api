@@ -124,7 +124,7 @@ class ProblemGroupAPI(APIView):
     def post(self, request):
         """
         request data
-        - name (groupName)
+        - name (string)
         - problems (problem id list)
         """
         user = request.user

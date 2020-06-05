@@ -13,7 +13,7 @@ class OriginProbSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OriginProb
-        fields = ('id', 'level', 'url', 'number', 'category', 'title', 'remark',)
+        fields = ('id', 'level', 'url', 'number', 'category', 'title', 'remark', )
 
 
 class ProbSerializer(serializers.ModelSerializer):
@@ -23,16 +23,10 @@ class ProbSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Problem
-        fields = ('id', 'origin', 'is_solved', 'solved_time',)
+        fields = ('id', 'origin', 'is_solved', 'solved_time', )
 
 
 class ProbGroupSerializer(serializers.ModelSerializer):
-    problems = serializers.PrimaryKeyRelatedField(
-        read_only=True,
-        required=False,
-        many=True
-    )
-
     class Meta:
         model = ProblemGroup
-        fields = ('id', 'name', 'problems', 'problems_count', 'solved_problems_count',)
+        fields = ('id', 'name', 'problems_count', 'solutions_count', )
