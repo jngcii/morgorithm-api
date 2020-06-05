@@ -41,6 +41,9 @@ class UserAPI(APIView):
 
     def delete(self, request):
         user = request.user
+        password = request.data.get('password', None)
+        if not password or not user.check_password(password):
+            return Response(status.HTTP_400_BAD_REQUEST)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
