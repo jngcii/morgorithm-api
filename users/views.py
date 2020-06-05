@@ -1,188 +1,198 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate
-from .serializers import (
-    SignUpSerializer,
-    LogInSerializer,
-    MiniGroupSerializer,
-    GroupSerializer,
-    InitialProfileSerializer,
-    CurrentUserSerializer,
-    AvatarSerializer,
-)
+from django.contrib.auth import authenticate, login, logout
+from .serializers import SignUpSerializer, UserSerializer, GroupSerializer
 from .models import User, Group
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-from django.template import loader
-from django.core.mail import send_mail
-from django.conf import settings
+# from django.template import loader
+# from django.core.mail import send_mail
+# from django.conf import settings
 # from pprint import pprint
-import random
+
+
+def get_group(group_id):
+    try:
+        group = Group.objects.get(id=group_id)
+        return group
+    except Group.DoesNotExist:
+        return None
+
+
+class UserAPI(APIView):
+    def get(self, request):
+        username = request.GET.get('username', None)
+        if username:
+            user = User.objects.get(username=username)
+        else:
+            user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            if user:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class SignUp(APIView):
-    """ 
-    Creates the user. 
-    """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        request data
+        - username
+        - name (option)
+        - password
+        """
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             if user:
+                login(request, user)
                 token = Token.objects.create(user=user)
-                new_serializer = InitialProfileSerializer(user)
-                new_json = new_serializer.data
-                new_json['token'] = token.key
-                return Response(new_json, status=status.HTTP_201_CREATED)
+                response = serializer.data
+                response['token'] = token.key
+                return Response(response, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignIn(APIView):
-    """
-    Log user in
-    """
     permission_classes = [AllowAny]
 
     def post(self, request):
-        if 'cred' not in request.data or not request.data['cred'] or not request.data['password']:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        user = None
-
-        try:
-            user = User.objects.get(email=request.data['cred'])
-        except User.DoesNotExist:
-            pass
-
-        if not user:
-            try:
-                user = User.objects.get(username=request.data['cred'])
-            except User.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-        
-        request.data['email'] = user.email
-        serializer = LogInSerializer(data=request.data)
+        """
+        request data
+        - username
+        - password
+        """
+        serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            user = authenticate(email=request.data['email'], password=request.data['password'])
+            user = authenticate(**request.data)
             if user:
+                login(request, user)
                 token, _ = Token.objects.get_or_create(user=user)
-                new_serializer = InitialProfileSerializer(user)
-                new_json = new_serializer.data
-                new_json['token'] = token.key
-                return Response(new_json, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+                response = serializer.data
+                response['token'] = token.key
+                return Response(response, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class GetUser(APIView):
-    """
-    Get User
-    """
-    def get(self, request, username):
-        """
-        request data 안받는다
-        """
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = CurrentUserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ChangePassword(APIView):
-    """
-    Password Change
-    """
-
-    def post(self, request):
+class SignOut(APIView):
+    def get(self, request):
         user = request.user
-
-        old_pw = request.data.get('old_password', None)
-        new_pw = request.data.get('new_password', None)
-
-        if old_pw is None or new_pw is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        old_check = user.check_password(old_pw)
-        
-        if not old_check:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if len(new_pw) < 8 or len(new_pw) > 25:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        user.set_password(new_pw)
+        token = Token.objects.filter(user=user)
+        token.delete()
+        logout(request)
         return Response(status=status.HTTP_200_OK)
 
 
-class GetGroup(APIView):
-    """
-    get group
-    """
-    def get(self, request, groupId):
+class ChangePassword(APIView):
+    def post(self, request):
         """
-        not get request data
+        request data
+        - password
         """
-        try:
-            group = Group.objects.get(id=groupId)
-        except Group.DoesNotExist:
+        user = request.user
+        if not 'password' in request.data or len(request.data['password']) < 8:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = GroupSerializer(group, context={"request":request})
+        user.set_password(request.data['password'])
+        return Response(status=status.HTTP_200_OK)
+
+
+class AvatarAPI(APIView):
+
+    def put(self, request):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            if user:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user = request.user
+        user.avatar.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CheckUnique(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        request data
+        - username
+        """
+        if 'username' not in request.data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            User.objects.get(username=request.data['username'])
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_200_OK)
+
+
+class GroupAPI(APIView):
+    def get(self, request):
+        keyword = request.GET.get('keyword', None)
+        if keyword:
+            groups = Group.objects.filter(name__icontains=keyword)[:10]
+        else:
+            groups = Group.objects.all()[:10]
+        serializer = GroupSerializer(groups, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class CreateGroup(APIView):
-    """ 
-    Creates the group
-    """
     def post(self, request):
         """
         request data
         - name
-        - password
+        - password (option)
         """
-        if 'name' not in request.data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         user = request.user
-        if user.group.count() >= 10:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = GroupSerializer(data=request.data)
+        serializer = GroupSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             group = serializer.save()
             if group:
                 group.members.add(user)
-                group.save()
-                new_serializer = GroupSerializer(group, context={"request":request})
-                return Response(new_serializer.data, status=status.HTTP_201_CREATED)
-                
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class GroupDetailAPI(APIView):
+    def get(self, request, group_id):
+        group = get_group(group_id)
+        if not group:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = GroupSerializer(group, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class EnterGroup(APIView):
-    """
-    Enter the group
-    """
-    def post(self, request, groupId):
+    def post(self, request, group_id):
         user = request.user
-
-        try:
-            group = Group.objects.get(id=groupId)
-        except Group.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+        group = get_group(group_id)
+        if not group:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         if group.password:
-            if not request.data.get('password', None):
-                return Response(status=status.HTTP_404_NOT_FOUND)
-            if group.password != request.data['password']:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-
+            password = request.data.get('password', None)
+            if not password:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if group.password != password:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         group.members.add(user)
-        group.save()
         serializer = GroupSerializer(group, context={"request":request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -191,240 +201,48 @@ class LeaveGroup(APIView):
     """
     Leave the group
     """
-    def get(self, request, groupId):
+    def get(self, request, group_id):
         user = request.user
-
-        try:
-            group = Group.objects.get(id=groupId)
-        except Group.DoesNotExist:
+        group = get_group(group_id)
+        if not group:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-            
-        res = group.members.remove(user)
-        if res == -1:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        group.save()
-
+        group.members.remove(user)
         if group.members.count() == 0:
             group.delete()
         return Response(status=status.HTTP_200_OK)
 
 
-class SearchGroup(APIView):
-    """
-    Search the group
-    """
-    def get(self, request, txt):
-        try:
-            groups = Group.objects.filter(name__icontains=txt)[:10]
-        except Group.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = MiniGroupSerializer(groups, many=True, context={"request":request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CheckUnique(APIView):
-    """
-    Check email unqiue
-    """
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        """
-        request data
-        - username or email
-        """
-        print(request.data)
-        if 'email' in request.data:
-            try:
-                User.objects.get(email=request.data['email'])
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            except User.DoesNotExist:
-                return Response(status=status.HTTP_200_OK)
-        elif 'username' in request.data:
-            try:
-                User.objects.get(username=request.data['username'])
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            except User.DoesNotExist:
-                return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-class SendConfirmCode(APIView):
-    """
-    Send Confirm code
-    """
-    permission_classes = [AllowAny]
-    
-    def post(self, request):
-        """
-        request data
-        - email
-        """
-        if 'email' not in request.data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        to_mail_addr = request.data['email']
-        if User.objects.filter(email=to_mail_addr).exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
-        code = ''.join(code)
-
-        title = '[MORGORITHM] Confirm email'
-        from_mail_addr = settings.DEFAULT_FROM_EMAIL
-        html_msg = loader.render_to_string('email_template.html', {'code': code})
-
-        res = send_mail(
-            title,
-            '',
-            from_mail_addr,
-            [to_mail_addr],
-            fail_silently=True,
-            html_message=html_msg
-        )
-
-        if res:
-            return Response({'confirm_code': code}, status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-class ConfirmEmail(APIView):
-    """
-    Veirfy email
-    """
-    def get(self, request):
-        user = request.user
-        user.is_confirmed = True
-        user.save()
-        return Response(status=status.HTTP_200_OK)
-        
-
-class EditProfile(APIView):
-    """
-    edit profile
-    """
-    def put(self, request):
-        user = request.user
-
-        un = request.data['username']
-        n = request.data['name']
-        
-        user.username = un
-        user.name = n
-        user.save()
-
-        return Response(status=status.HTTP_200_OK)
-
-
-class GoogleAuthView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-
-        credential = request.data['credential']['profileObj']
-
-        try:
-            user = User.objects.get(email=credential['email'])
-            if user.is_social:
-                token, _ = Token.objects.get_or_create(user=user)
-                new_serializer = InitialProfileSerializer(user)
-                new_json = new_serializer.data
-                new_json['token'] = token.key
-                return Response(new_json, status=status.HTTP_200_OK)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-            
-        except User.DoesNotExist:
-            req = dict()
-            req['email'] = credential['email']
-            username = req['email'].split('@')[0]
-            cnt = 0
-            while True:
-                try:
-                    um = username + '_' + str(cnt) if cnt else username
-                    User.objects.get(username=um)
-                    cnt += 1
-                except User.DoesNotExist:
-                    username = um
-                    break
-            req['username'] = um
-            req['name'] = credential['name']
-            req['password'] = 'asdfqwer'
-            serializer = SignUpSerializer(data=req)
-            if serializer.is_valid():
-                user = serializer.save()
-                user.is_social = True
-                user.save()
-                if user:
-                    token = Token.objects.create(user=user)
-                    new_serializer = InitialProfileSerializer(user)
-                    new_json = new_serializer.data
-                    new_json['token'] = token.key
-                    return Response(new_json, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-class UploadAvatar(APIView):
-
-    def put(self, request):
-
-        serializer = AvatarSerializer(request.user, data=request.data)
-
-        if serializer.is_valid():
-
-            serializer.save()
-
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
-        else:
-            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-class SendNewPassword(APIView):
-    """
-    Send Confirm code
-    """
-    permission_classes = [AllowAny]
-    
-    def post(self, request):
-        """
-        request data
-        - email
-        """
-        if 'email' not in request.data:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        to_mail_addr = request.data['email']
-        
-        try:
-            user = User.objects.get(email=to_mail_addr)
-        except User.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
-        code = ''.join(code)
-
-        user.set_password(code)
-        user.save()
-
-        title = '[MORGORITHM] initialize password'
-        from_mail_addr = settings.DEFAULT_FROM_EMAIL
-        html_msg = loader.render_to_string('new_password.html', {'code': code})
-
-        res = send_mail(
-            title,
-            '',
-            from_mail_addr,
-            [to_mail_addr],
-            fail_silently=True,
-            html_message=html_msg
-        )
-
-        if res:
-            return Response(status=status.HTTP_200_OK)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+# class SendNewPassword(APIView):
+#     permission_classes = [AllowAny]
+#     def post(self, request):
+#         """
+#         request data
+#         - email
+#         """
+#         if 'email' not in request.data:
+#             return Response(status=status.HTTP_400_BAD_REQUEST)
+#         to_mail_addr = request.data['email']
+#         try:
+#             user = User.objects.get(email=to_mail_addr)
+#         except User.DoesNotExist:
+#             return Response(status=status.HTTP_404_NOT_FOUND)
+#         code = random.sample('abcdefghijklmnopqrstuvwxyz1234567890', 8)
+#         code = ''.join(code)
+#         user.set_password(code)
+#         user.save()
+#         title = '[MORGORITHM] initialize password'
+#         from_mail_addr = settings.DEFAULT_FROM_EMAIL
+#         html_msg = loader.render_to_string('new_password.html', {'code': code})
+#         res = send_mail(
+#             title,
+#             '',
+#             from_mail_addr,
+#             [to_mail_addr],
+#             fail_silently=True,
+#             html_message=html_msg
+#         )
+#         if res:
+#             return Response(status=status.HTTP_200_OK)
+#         return Response(status=status.HTTP_400_BAD_REQUEST)

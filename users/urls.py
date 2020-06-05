@@ -5,21 +5,17 @@ app_name = 'users'
 
 urlpatterns = [
     # user
-    path('sign-in/', views.SignIn.as_view(), name='sign-in'),
-    path('sign-up/', views.SignUp.as_view(), name='sign-up'),
-    path('google-auth/', views.GoogleAuthView.as_view(), name='google-auth'),
-    path('check-unique/', views.CheckUnique.as_view(), name='check-unique'),
-    path('change-password/', views.ChangePassword.as_view(), name='change-password'),
-    path('find-password/', views.SendNewPassword.as_view(), name='find-password'),
-    path('edit-profile/', views.EditProfile.as_view(), name='edit-profile'),
-    path('upload-avatar/', views.UploadAvatar.as_view(), name='upload-avatar'),
-    path('send-confirm-code/', views.SendConfirmCode.as_view(), name='send-confirm-code'),
-    path('get-user/<username>/', views.GetUser.as_view(), name='get-user'),
+    path('', views.UserAPI.as_view(), name='user_api'),
+    path('signup/', views.SignUp.as_view(), name='signup'),
+    path('signin/', views.SignIn.as_view(), name='signin'),
+    path('signout/', views.SignOut.as_view(), name='signout'),
+    path('change_password/', views.ChangePassword.as_view(), name='change_password'),
+    path('avatarAPI/', views.AvatarAPI.as_view(), name='avatar_api'),
+    path('check_unique/', views.CheckUnique.as_view(), name='check_unique'),
 
     # group
-    path('create-group/', views.CreateGroup.as_view(), name='create-group'),
-    path('get-group/<int:groupId>/', views.GetGroup.as_view(), name='get-group'),
-    path('enter-group/<int:groupId>/', views.EnterGroup.as_view(), name='enter-group'),
-    path('leave-group/<int:groupId>/', views.LeaveGroup.as_view(), name='leave-group'),
-    path('search-group/<txt>/', views.SearchGroup.as_view(), name='search-group'),
+    path('group/', views.GroupAPI.as_view(), name='group_api'),
+    path('group/<int:group_id>/', views.GroupDetailAPI.as_view(), name='group_detail_api'),
+    path('group/<int:group_id>/enter/', views.EnterGroup.as_view(), name='enter_group'),
+    path('group/<int:group_id>/leave/', views.LeaveGroup.as_view(), name='leave_group'),
 ]
