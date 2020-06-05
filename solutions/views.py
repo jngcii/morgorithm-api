@@ -214,7 +214,7 @@ class CommentDetailAPI(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, _, comment_id):
+    def delete(self, request, comment_id):
         found_comment = get_solution(comment_id)
         if not found_comment:
             return Response(status=status.HTTP_404_NOT_FOUND)
