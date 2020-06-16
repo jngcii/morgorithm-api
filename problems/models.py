@@ -16,6 +16,7 @@ class OriginProb(models.Model):
     category = models.CharField(null=True, blank=True, choices=TYPE_CHOICES, max_length=255)
     title = models.CharField(max_length=255)
     remark = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return '{} - {} - {} - {}'.format(self.category, self.number, self.title, self.level)
@@ -30,7 +31,7 @@ class ProblemGroup(models.Model):
         return self.problems.count()
 
     @property
-    def solved_problems_count(self):
+    def solutions_count(self):
         return self.problems.filter(is_solved=True).count()
 
 

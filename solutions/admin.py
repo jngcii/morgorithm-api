@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Solution, Comment, SubComment
+from .models import Solution, Comment
 
 admin.site.register(Solution)
 admin.site.register(Comment)
-admin.site.register(SubComment)
